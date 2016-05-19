@@ -52,7 +52,7 @@ module Task1B(
   
   wire isFifoToOutFinish;
   wire isOutToComFinish;
-  wire isBetweenToFifo;
+  wire isBetweenToFifoFinish;
   
   wire [7:0] outData;
   wire [7:0] CRC;
@@ -74,7 +74,7 @@ module Task1B(
   SinglePulser sp1(pb5, pb5_raw, clktrigger);
   
   Between_to_FIFO betweenToFifo(
-    isBetweenToFifo,
+    isBetweenToFifoFinish,
     CRC,
     dataError,
     fifoDataIn,
@@ -108,7 +108,7 @@ module Task1B(
     isFifoEmpty, 
     isFifoBusy, 
     isFull, 
-    0, 
+    fifoRe, 
     fifoWe, 
     clk, 
     reset
@@ -122,7 +122,7 @@ module Task1B(
     outToComEnable
   );
   
-  SevenSegment svsg(a, b, c, d, e, f, g, numsl0, numsl1, numsl2, numsl3, clk_raw, 0, debug[7:4], debug[3:0], fifoCount[3:0], CRC[3:0]);
+  SevenSegment svsg(a, b, c, d, e, f, g, numsl0, numsl1, numsl2, numsl3, clk_raw, 0, debug[7:4], debug[3:0], CRC[7:4], CRC[3:0]);
   
   initial begin
     clk = 0;

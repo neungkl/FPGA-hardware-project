@@ -2,7 +2,7 @@ module Out_to_com(
   output reg isFinish,
   output reg tx,
   input isStart,
-  input [7:0] data,
+  input [7:0] data_raw,
   input clk,
   input enable );
   
@@ -10,6 +10,8 @@ module Out_to_com(
   wire parBit;
   reg parEnable;
   reg parReset;
+	
+	reg [7:0] data;
   
   reg [2:0] i;
 	
@@ -21,6 +23,7 @@ module Out_to_com(
         if(isStart) begin
           isFinish = 0;
           parReset = 0;
+					data = data_raw;
           state = 1;
         end
       end

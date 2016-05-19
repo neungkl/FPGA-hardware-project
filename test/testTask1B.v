@@ -31,6 +31,9 @@ module testTask1B(
   wire clktrigger;
   
   reg [7:0] buff; 
+	reg [7:0] flush;
+	
+	Flush #(8) f1(flush);
   
   assign clktrigger = clkcount[16];
   assign {t0,t1,t2,t3,t4,t5,t6,t7} = buff;
@@ -67,13 +70,17 @@ module testTask1B(
   
   always @(posedge clk) begin
     if(state == 0) begin
-			buff = 8'h41;
+			buff = 8'h40;
 			state = 1;
+			tsent = 0;
+			flush = tsent;
 		end
 		else if(state == 1) begin
-			buff = 8'h41;
-      tsent = 1;
-      state = 2;
+			if(nextval == 1) begin
+				flush = buff;
+				tsent = 1;
+				state = 2;
+			end
     end
     else if(state == 2) begin
       if(trecieve) begin
@@ -82,14 +89,16 @@ module testTask1B(
 			end
 		end
 		else if(state == 3) begin
-			if(nextval) begin
+			if(nextval == 0) begin
 				buff = buff + 1;
+				flush = buff;
 				state = 1;
 			end
     end
     else begin
 			state = 0;
     end
+		flush = state;
   end
   
 endmodule

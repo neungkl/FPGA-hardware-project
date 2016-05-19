@@ -9,6 +9,10 @@ module CRC8(CRC, BITVAL, BITSTRB, ENABLE, CLEAR);
    wire         inv;
    
    assign inv = BITVAL ^ CRC[7];                   // XOR required?
+	 
+	 initial begin
+			CRC = 0;
+	 end
    
    always @(posedge BITSTRB or posedge CLEAR) begin
       if (CLEAR) begin

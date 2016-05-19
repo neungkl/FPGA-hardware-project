@@ -26,7 +26,7 @@ module Between_to_FIFO(
   
   reg [2:0] i;
   
-  reg [2:0] flush;
+  reg [7:0] flush;
 	
 	Flush #(8) f1(flush);
   
@@ -36,47 +36,47 @@ module Between_to_FIFO(
     if(enable) begin
 			case(state)
 			0 : begin
-				crcEnable <= 0;
-				fifo_we <= 0;
-				trecieve <= 1;
-				isFinish <= 1;
+				crcEnable = 0;
+				fifo_we = 0;
+				trecieve = 1;
+				isFinish = 1;
 				if(tsent == 0) begin
-					state <= 1;
-					debug <= forSent;
+					debug = forSent;
+					state = 1;
 				end
 			end
 			1 : begin
 				if(tsent == 1) begin
-          trecieve <= 0;
-          i <= 7;
-          forSent <= {t0,t1,t2,t3,t4,t5,t6,t7};
-					flush <= forSent;
-          state <= 2;
+          trecieve = 0;
+          i = 7;
+          forSent = {t0,t1,t2,t3,t4,t5,t6,t7};
+					flush = forSent;
+          state = 2;
         end
 			end
 			2 : begin
-				crcBit <= forSent[i]; 
-				crcEnable <= 1;
+				crcBit = forSent[i]; 
+				crcEnable = 1;
         if(i == 0) begin
-          state <= 3;
+          state = 3;
         end
-        else i <= i - 1;
+        else i = i - 1;
 			end
 			3 : begin
-				crcEnable <= 0;
+				crcEnable = 0;
         if(!fifo_busy) begin
-          fifo_we <= 1;
-          state <= 4;
+          fifo_we = 1;
+          state = 4;
         end
 			end
 			4 : begin
-				fifo_we <= 0;
-        state <= 5;
+				fifo_we = 0;
+        state = 5;
 			end
-			default : state <= 0;
+			default : state = 0;
 			endcase
 			
-      flush <= state;
+      flush = state;
     end
   end
   

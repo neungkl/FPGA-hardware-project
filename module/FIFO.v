@@ -19,7 +19,7 @@ module FIFO(dataIn, dataOut, count, isEmpty, isBusy, isFull, re, we, clk, reset)
   
 	assign isEmpty = (count == 0);
   assign dataOut = mem[first];  
-  assign isBusy = (re || we);
+  assign isBusy = (re == 1 || we == 1);
   assign isFull = (count == (1<<MEM_SIZE));
   
   always @(posedge clk) begin
@@ -29,16 +29,16 @@ module FIFO(dataIn, dataOut, count, isEmpty, isBusy, isFull, re, we, clk, reset)
 			count = 0;
     end
     else begin
-      if(re) begin
+      if(we) begin
+        mem[last] = dataIn;
+        last = last + 1;
+				count = count + 1;
+      end
+			if(re) begin
 				if(isEmpty == 0) begin
           first = first + 1;
 					count = count - 1;
         end
-      end
-      else if(we) begin
-        mem[last] = dataIn;
-        last = last + 1;
-				count = count + 1;
       end
     end
   end
