@@ -26,6 +26,9 @@ module Between_to_FIFO(
   reg [2:0] i;
   
   reg [7:0] forSent;
+  reg [2:0] flushState;
+	
+	Flush #(3) f1(flushState);
   
   assign fifo_data_con = fifo_we ? forSent : 8'bZ;
   
@@ -35,11 +38,11 @@ module Between_to_FIFO(
     if(enable) begin
       if(state == 0) begin
         if(tsent == 1) begin
-          trecieve <= 0;
-          i <= 7;
-          forSent <= {t7,t6,t5,t4,t3,t2,t1,t0};
-          crcEnable <= 1;
-          state <= 1;
+          trecieve = 0;
+          i = 7;
+          forSent = {t7,t6,t5,t4,t3,t2,t1,t0};
+          crcEnable = 1;
+          state = 1;
         end
       end
       else if(state == 1) begin
@@ -52,20 +55,21 @@ module Between_to_FIFO(
       end
       else if(state == 2) begin
         if(!fifo_busy) begin
-          fifo_we <= 1;
-          state <= 3;
+          fifo_we = 1;
+          state = 3;
         end
       end
       else if(state == 3) begin
-        fifo_we <= 0;
-        state <= 4;
+        fifo_we = 0;
+        state = 4;
       end
       else begin
-        crcEnable <= 0;
-        fifo_we <= 0;
-        trecieve <= 1;
-        isFinish <= 1;
+        crcEnable = 0;
+        fifo_we = 0;
+        trecieve = 1;
+        isFinish = 1;
       end
+      flushState = state;
     end
   end
   
