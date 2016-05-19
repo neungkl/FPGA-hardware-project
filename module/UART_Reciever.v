@@ -6,8 +6,7 @@ module UART_Reciever(
   output reg [3:0] error,
 	input rx,
 	input recieved,
-  input clk,
-	output reg [7:0] debug
+  input clk
 	);
   
   reg [2:0] index;
@@ -17,6 +16,8 @@ module UART_Reciever(
   reg parityEnable;
   reg parityClr;
   wire bitForCheck;
+	
+	reg [4:0] debug;
   
   assign bitForCheck = rx;
 	

@@ -12,8 +12,7 @@ module COM_to_FIFO(
   input fifo_busy,
   input clk,
   input enable,
-  input reset,
-	output [7:0] debug );
+  input reset );
   
 	wire [7:0] fifo_data;
   wire isGetSending;
@@ -26,7 +25,7 @@ module COM_to_FIFO(
   
   assign tx = rx;
   
-  UART_Reciever uartrc(fifo_data, isGetSending, error, rx, isGetRecieved, clk, debug);
+  UART_Reciever uartrc(fifo_data, isGetSending, error, rx, isGetRecieved, clk);
   CRC8 crc(CRC, crcBit, clk, crcEnable, reset);
   
   always @(posedge clk) begin

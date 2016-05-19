@@ -18,10 +18,10 @@ module testInput1(
   output numsl3,
   output tx,
   input rx,
-  input dp1_raw,
+  input pb1_raw,
   input clk_raw );
   
-  wire dp1;
+  wire pb1;
   
   reg [16:0] clkcount;
   reg [11:0] clkUARTcount;
@@ -57,9 +57,8 @@ module testInput1(
   assign clktrigger = clkcount[16];
 	
   wire [7:0] debug;
-	assign debug = fifoDataOut;
   
-  SinglePulser sp1(dp1, dp1_raw, clktrigger);
+  SinglePulser sp1(pb1, pb1_raw, clktrigger);
   COM_to_FIFO comtofifo(isComToFifoFinish, CRC, comToFifoError, fifoDataIn, fifoWe, tx, rx, isFifoBusy, clk, comToFifoEnable, reset);
   FIFO_to_out fifotoout(isFifoToOutFinish, fifoRe, outData, isOutStart, isFifoBusy, isFifoEmpty, fifoDataOut, isOutFinish, clk, fifoToOutEnable);
   FIFO fo(fifoDataIn, fifoDataOut, fifoCount, isFifoEmpty, isFifoBusy, isFull, fifoRe, fifoWe, clk, reset);
@@ -83,7 +82,7 @@ module testInput1(
   end
 	
 	always @(posedge clktrigger) begin
-		if(dp1) begin
+		if(pb1) begin
 			reset = 1;
 		end
 		else begin

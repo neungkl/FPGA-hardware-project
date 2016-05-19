@@ -19,8 +19,8 @@ module FIFO(dataIn, dataOut, count, isEmpty, isBusy, isFull, re, we, clk, reset)
   
   assign dataOut = mem[first];  
   assign isEmpty = (count == 0);
-  assign isBusy = re == 1 || we == 1;
-  assign isFull = count == (1<<MEM_SIZE);
+  assign isBusy = (re == 1 || we == 1);
+  assign isFull = (count == (1<<MEM_SIZE));
   
   always @(posedge clk) begin
     if(reset) begin
