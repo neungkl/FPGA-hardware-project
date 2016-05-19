@@ -4,8 +4,7 @@ module Out_to_com(
   input isStart,
   input [7:0] data,
   input clk,
-  input enable,
-	output reg [7:0] debug );
+  input enable );
   
   reg [2:0] state;
   wire parBit;
@@ -22,7 +21,6 @@ module Out_to_com(
         if(isStart) begin
           isFinish = 0;
           parReset = 0;
-					debug = data;
           state = 1;
         end
       end

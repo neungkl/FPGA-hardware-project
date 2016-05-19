@@ -2,7 +2,7 @@ module Between_to_FIFO(
   output reg isFinish,
   output [7:0] CRC,
   output [3:0] error,
-  output [7:0] fifo_data_con,
+  output reg [7:0] forSent,
   output reg fifo_we,
   output reg trecieve,
   input t0,
@@ -17,7 +17,8 @@ module Between_to_FIFO(
   input fifo_busy,
   input clk,
   input enable,
-  input reset );
+  input reset,
+	output reg [7:0] debug );
   
   reg [2:0] state;
   reg crcEnable;
@@ -25,51 +26,57 @@ module Between_to_FIFO(
   
   reg [2:0] i;
   
-  reg [7:0] forSent;
-  reg [2:0] flushState;
+  reg [2:0] flush;
 	
-	Flush #(3) f1(flushState);
-  
-  assign fifo_data_con = fifo_we ? forSent : 8'bZ;
+	Flush #(8) f1(flush);
   
   CRC8 crc(CRC, crcBit, clk, crcEnable, reset);
   
   always @(posedge clk) begin
     if(enable) begin
-      if(state == 0) begin
-        if(tsent == 1) begin
+			case(state)
+			0 : begin
+				crcEnable = 0;
+				fifo_we = 0;
+				trecieve = 1;
+				isFinish = 1;
+				if(tsent == 0) begin
+					state = 1;
+					debug = forSent;
+				end
+			end
+			1 : begin
+				if(tsent == 1) begin
           trecieve = 0;
           i = 7;
-          forSent = {t7,t6,t5,t4,t3,t2,t1,t0};
-          crcEnable = 1;
-          state = 1;
-        end
-      end
-      else if(state == 1) begin
-        crcBit = forSent[i]; 
-        if(i == 0) begin
-          crcEnable = 0;
+          forSent = {t0,t1,t2,t3,t4,t5,t6,t7};
+					flush = forSent;
           state = 2;
         end
-        else i = i - 1;
-      end
-      else if(state == 2) begin
-        if(!fifo_busy) begin
-          fifo_we = 1;
+			end
+			2 : begin
+				crcBit = forSent[i]; 
+				crcEnable = 1;
+        if(i == 0) begin
           state = 3;
         end
-      end
-      else if(state == 3) begin
-        fifo_we = 0;
-        state = 4;
-      end
-      else begin
-        crcEnable = 0;
-        fifo_we = 0;
-        trecieve = 1;
-        isFinish = 1;
-      end
-      flushState = state;
+        else i = i - 1;
+			end
+			3 : begin
+				crcEnable = 0;
+        if(!fifo_busy) begin
+          fifo_we = 1;
+          state = 4;
+        end
+			end
+			4 : begin
+				fifo_we = 0;
+        state = 5;
+			end
+			default : state = 0;
+			endcase
+			
+      flush = state;
     end
   end
   

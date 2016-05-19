@@ -1,12 +1,15 @@
-`include "../structure/Out_to_com.v"
+`include "../structure/COM_to_FIFO.v"
 `include "../structure/FIFO_to_out.v"
+`include "../structure/Out_to_between.v"
 `include "../module/FIFO.v"
 `include "../module/SinglePulser.v"
 `include "../module/SevenSegment.v"
-`include "../module/Flush.v"
+`include "../module/CRC8.v"
 `include "../module/Parity.v"
+`include "../module/UART_Reciever.v"
+`include "../module/Flush.v"
 
-module testInput2(
+module Task1A(
   output a,
   output b,
   output c,
@@ -22,16 +25,16 @@ module testInput2(
   input rx,
   input pb5_raw,
   input clk_raw,
-  input t0,
-  input t1,
-  input t2,
-  input t3,
-  input t4,
-  input t5,
-  input t6,
-  input t7,
-  input tsent,
-  output trecieve );
+  output t0,
+  output t1,
+  output t2,
+  output t3,
+  output t4,
+  output t5,
+  output t6,
+  output t7,
+  output tsent,
+  input trecieve );
   
   wire pb5;
   
@@ -48,19 +51,19 @@ module testInput2(
   wire fifoWe;
   reg reset;
   
+  wire isComToFifoFinish;
   wire isFifoToOutFinish;
-  wire isOutToComFinish;
-  wire isBetweenToFifo;
+  wire isOutToBeetweenFinish;
+  
+  wire [3:0] comToFifoError;
+  wire [7:0] CRC;
   
   wire [7:0] outData;
-  wire [7:0] CRC;
-  wire [3:0] dataError;
   
   wire isOutStart;
   
+  reg comToFifoEnable;
   reg fifoToOutEnable;
-  reg outToComEnable;
-  reg betweenToFifoEnable;
   
   wire [7:0] fifoDataIn;
   wire [7:0] fifoDataOut;
@@ -68,35 +71,20 @@ module testInput2(
   assign clktrigger = clkcount[16];
 	
   wire [7:0] debug;
-	
+  
   SinglePulser sp1(pb5, pb5_raw, clktrigger);
-  
-  Between_to_FIFO betweenToFifo(
-    isBetweenToFifo,
-    CRC,
-    dataError,
-    fifoDataIn,
-    fifoWe,
-    trecieve,
-    t0, t1, t2, t3, t4, t5, t6, t7,
-    tsent,
-    isFifoBusy,
-    clk,
-    betweenToFifoEnable,
-    reset
-  );
-  
-  FIFO_to_out fifoToOut(
-    isFifoToOutFinish, 
-    fifoRe, 
-    outData, 
-    isOutStart, 
+  COM_to_FIFO comToFifo(
+    isComToFifoFinish, 
+    CRC, 
+    comToFifoError, 
+    fifoDataIn, 
+    fifoWe, 
+    tx, 
+    rx, 
     isFifoBusy, 
-    isFifoEmpty, 
-    fifoDataOut, 
-    isOutToComFinish, 
     clk, 
-    fifoToOutEnable
+    comToFifoEnable, 
+    reset
   );
   FIFO fo(
     fifoDataIn, 
@@ -110,17 +98,29 @@ module testInput2(
     clk, 
     reset
   );
-  Out_to_com outToCom(
-    isOutToComFinish, 
-    tx, 
-    isOutStart, 
+  FIFO_to_out fifoToOut(
+    isFifoToOutFinish, 
+    fifoRe, 
     outData, 
+    isOutStart, 
+    isFifoBusy, 
+    isFifoEmpty, 
+    fifoDataOut, 
+    isOutToBeetweenFinish, 
     clk, 
-    outToComEnable, 
-    debug
+    fifoToOutEnable
+  );
+  Out_to_between outToBetween(
+    isOutToBeetweenFinish, 
+    t0, t1, t2, t3, t4, t5, t6, t7,
+    tsent,
+    trecieve,
+    isOutStart,
+    outData,
+    clk
   );
   
-  SevenSegment svsg(a, b, c, d, e, f, g, numsl0, numsl1, numsl2, numsl3, clk_raw, 0, debug[3:0], outData[3:0], value[7:4], value[3:0]);
+  SevenSegment svsg(a, b, c, d, e, f, g, numsl0, numsl1, numsl2, numsl3, clk_raw, 0, outData[7:4], outData[3:0], CRC[7:4], CRC[3:0]);
   
   initial begin
     clk = 0;
@@ -132,7 +132,7 @@ module testInput2(
   always @(posedge clk_raw) begin
     clkcount = clkcount + 1;
 		clkUARTcount = clkUARTcount + 1;
-    if(clkUARTcount > 1302) begin
+    if(clkUARTcount > 1159) begin
       clkUARTcount = 0;
 			clk = !clk;
     end
@@ -147,8 +147,7 @@ module testInput2(
 		end
     
     fifoToOutEnable = 1;
-    outToComEnable = 1;
-    betweenToFifoEnable = 1;
+    comToFifoEnable = 1;
 	end
 
 endmodule

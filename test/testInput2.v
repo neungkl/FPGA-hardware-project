@@ -69,7 +69,7 @@ module testInput2(
   SinglePulser sp1(pb1, pb1_raw, clktrigger);
   SinglePulser sp2(pb2, pb2_raw, clktrigger);
   FIFO_to_out fifotoout(isFifoToOutFinish, fifoRe, outData, isOutStart, isFifoBusy, isFifoEmpty, fifoDataOut, isOutToComFinish, clk, fifoToOutEnable);
-  Out_to_com outtocom(isOutToComFinish, tx, isOutStart, outData, clk, outToComEnable, debug);
+  Out_to_com outtocom(isOutToComFinish, tx, isOutStart, outData, clk, outToComEnable);
   FIFO fo(fifoDataIn, fifoDataOut, fifoCount, isFifoEmpty, isFifoBusy, isFull, fifoRe, fifoWe, clk, reset);
   
   SevenSegment svsg(a, b, c, d, e, f, g, numsl0, numsl1, numsl2, numsl3, clk_raw, 0, debug[3:0], outData[3:0], value[7:4], value[3:0]);
