@@ -4,7 +4,8 @@ module Out_to_com(
   input isStart,
   input [7:0] data,
   input clk,
-  input enable );
+  input enable,
+	output reg [7:0] debug );
   
   reg [2:0] state;
   wire parBit;
@@ -12,9 +13,6 @@ module Out_to_com(
   reg parReset;
   
   reg [2:0] i;
-  reg [2:0] flushState;
-	
-	Flush #(3) f1(flushState);
 	
   Parity par(parbit, tx, clk, parEnable, parReset);
   
@@ -24,6 +22,7 @@ module Out_to_com(
         if(isStart) begin
           isFinish = 0;
           parReset = 0;
+					debug = data;
           state = 1;
         end
       end
@@ -49,17 +48,13 @@ module Out_to_com(
         tx = 1;
         state = 5;
       end
-      else if(state == 5) begin
-        isFinish = 1;
-        state = 6;
-      end
       else begin
         tx = 1;
+				isFinish = 1;
         state = 0;
         parReset = 1;
         parEnable = 0;
       end
-			flushState = state;
     end
   end
   

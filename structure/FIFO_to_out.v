@@ -37,7 +37,6 @@ module FIFO_to_out(
         end
       end
       else begin
-        out_start = 0;
         fifo_re = 0;
         isFinish = 1;
 				state = 0;
