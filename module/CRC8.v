@@ -16,14 +16,14 @@ module CRC8(CRC, BITVAL, BITSTRB, ENABLE, CLEAR);
          end
       else if(ENABLE) begin
          CRC[7] = CRC[6] ^ inv;
-         CRC[6] = CRC[5];
-         CRC[5] = CRC[4] ^ inv;
-         CRC[4] = CRC[3];
-         CRC[3] = CRC[2] ^ inv;
-         CRC[2] = CRC[1];
-         CRC[1] = CRC[0] ^ inv;
+         CRC[6] = CRC[5] ^ inv;
+         CRC[5] = CRC[4];
+         CRC[4] = CRC[3] ^ inv;
+         CRC[3] = CRC[2];
+         CRC[2] = CRC[1] ^ inv;
+         CRC[1] = CRC[0];
          CRC[0] = inv;
-         end
       end
+end
    
 endmodule
