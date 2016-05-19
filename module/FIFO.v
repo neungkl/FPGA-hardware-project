@@ -2,12 +2,12 @@ module FIFO(dataIn, dataOut, count, isEmpty, isBusy, isFull, re, we, clk, reset)
   
   parameter MEM_SIZE = 10;
   
+	input [7:0] dataIn;
   output [7:0] dataOut;
   output reg [MEM_SIZE-1:0] count;
   output isEmpty;
   output isBusy;
   output isFull;
-	input [7:0] dataIn;
   input re;
   input we;
   input clk;
@@ -17,9 +17,9 @@ module FIFO(dataIn, dataOut, count, isEmpty, isBusy, isFull, re, we, clk, reset)
   reg [MEM_SIZE-1:0] first;
   reg [MEM_SIZE-1:0] last;
   
+	assign isEmpty = (count == 0);
   assign dataOut = mem[first];  
-  assign isEmpty = (count == 0);
-  assign isBusy = (re == 1 || we == 1);
+  assign isBusy = (re || we);
   assign isFull = (count == (1<<MEM_SIZE));
   
   always @(posedge clk) begin

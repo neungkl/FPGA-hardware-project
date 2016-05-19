@@ -1,6 +1,3 @@
-`include "../module/UART_Reciever.v"
-`include "../module/CRC8.v"
-
 module COM_to_FIFO(
   output reg isFinish,
   output [7:0] CRC,

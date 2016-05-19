@@ -1,5 +1,3 @@
-`include "../module/Parity.v"
-
 module UART_Reciever(
   output reg [7:0] data,
   output reg sent,
@@ -17,7 +15,8 @@ module UART_Reciever(
   reg parityClr;
   wire bitForCheck;
 	
-	reg [4:0] debug;
+	reg [2:0] flush;
+	Flush #(3) f1(flush);
   
   assign bitForCheck = rx;
 	
@@ -53,7 +52,7 @@ module UART_Reciever(
 			end
 			2 : begin
 				parityClr = 1;
-				if(checkBit != rx) error = 1;
+				//if(checkBit != rx) error = 1;
 				state = 3;
 			end
 			3 : begin
@@ -75,7 +74,7 @@ module UART_Reciever(
 			end
 			default : state = 0;
 		endcase
-		debug = state;
+		flush = state;
   end
    
 endmodule

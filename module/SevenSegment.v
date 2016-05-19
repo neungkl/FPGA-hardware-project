@@ -79,7 +79,8 @@ always @(posedge clks) begin
 	endcase
   end
   
-  casex(num)
+  case(num)
+	5'b????X : buff = 7'b0110111;
   0 : buff = 7'b1111110;
   1 : buff = 7'b0110000;
   2 : buff = 7'b1101101;

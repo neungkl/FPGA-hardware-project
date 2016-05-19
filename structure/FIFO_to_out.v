@@ -11,11 +11,14 @@ module FIFO_to_out(
   input enable );
   
   reg [2:0] state;
+	reg [2:0] flushState;
+	
+	Flush #(3) f1(flushState);
   
   always @(posedge clk) begin
     if(enable) begin
       if(state == 0) begin
-        if(fifo_busy == 0 && fifo_empty == 0) begin
+        if(fifo_busy == 0 && fifo_empty == 0 && out_finish) begin
           isFinish = 0;
           fifo_re = 1;
 					out_data = fifo_data;
@@ -39,6 +42,7 @@ module FIFO_to_out(
         isFinish = 1;
 				state = 0;
       end
+			flushState = state;
     end
   end
   

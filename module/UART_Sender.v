@@ -1,8 +1,6 @@
-`include "Parity.v"
-
 module UART_Sender(
   output reg isFinish,
-  output bitSent,
+  output reg bitSent,
   input start,
   input [7:0] data,
   input clk);
@@ -10,7 +8,6 @@ module UART_Sender(
   reg parityBit;
   reg parityEnable;
   reg parityClr;
-  reg bitSent;
   
   Parity par(parityBit, bitSent, clk, parityEnable, parityClr);
   
@@ -37,7 +34,7 @@ module UART_Sender(
       else i = i + 1;
     end
     else if(state == 3) begin
-      bitSent <= checkBit;
+      bitSent <= parityBit;
       state <= 4;
     end
     else if(state == 4) begin

@@ -1,5 +1,3 @@
-`include "../module/CRC8.v"
-
 module Between_to_FIFO(
   output reg isFinish,
   output [7:0] CRC,

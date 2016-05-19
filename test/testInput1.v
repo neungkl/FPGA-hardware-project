@@ -3,6 +3,9 @@
 `include "../module/FIFO.v"
 `include "../module/SinglePulser.v"
 `include "../module/SevenSegment.v"
+`include "../module/CRC8.v"
+`include "../module/UART_Reciever.v"
+`include "../module/Flush.v"
 
 module testInput1(
   output a,
@@ -57,6 +60,9 @@ module testInput1(
   assign clktrigger = clkcount[16];
 	
   wire [7:0] debug;
+	
+	reg [3:0] flushState;
+	Flush #(4) f1(flushState);
   
   SinglePulser sp1(pb1, pb1_raw, clktrigger);
   COM_to_FIFO comtofifo(isComToFifoFinish, CRC, comToFifoError, fifoDataIn, fifoWe, tx, rx, isFifoBusy, clk, comToFifoEnable, reset);
@@ -105,10 +111,11 @@ module testInput1(
 		end
 		else begin
 			state = 0;
-			isOutFinish = 0;
+			isOutFinish = 1;
 			comToFifoEnable = 1;
 			fifoToOutEnable = 1;
 		end
+		flushState = state;
   end
 
 endmodule
