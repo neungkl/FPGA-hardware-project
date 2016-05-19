@@ -71,7 +71,6 @@ module UART_Reciever(
 					sent = 0;
 					state = 0;
 				end
-				state = 0;
 			end
 			default : state = 0;
 		endcase
