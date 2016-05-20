@@ -38,17 +38,16 @@ module Between_to_FIFO(
 			0 : begin
 				crcEnable = 0;
 				fifo_we = 0;
-				trecieve = 1;
+				trecieve = 0;
 				isFinish = 1;
-				if(tsent == 0) begin
-					debug = forSent;
-					state = 1;
-				end
+				debug = forSent;
+				state = 1;
 			end
 			1 : begin
 				if(tsent == 1) begin
           trecieve = 0;
           i = 7;
+					isFinish = 0;
           forSent = {t0,t1,t2,t3,t4,t5,t6,t7};
 					flush = forSent;
           state = 2;
@@ -72,6 +71,13 @@ module Between_to_FIFO(
 			4 : begin
 				fifo_we = 0;
         state = 5;
+				trecieve = 1;
+			end
+			5 : begin
+				if(tsent == 0) begin
+					state = 0;
+					trecieve = 0;
+				end
 			end
 			default : state = 0;
 			endcase
