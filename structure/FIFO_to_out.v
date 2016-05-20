@@ -17,28 +17,31 @@ module FIFO_to_out(
   
   always @(posedge clk) begin
     if(enable) begin
-      if(state == 0) begin
-        if(fifo_busy == 0 && fifo_empty == 0 && out_finish) begin
-          isFinish = 0;
-          fifo_re = 1;
+			if(state == 0) begin
+				fifo_re = 0;
+        isFinish = 1;			
+				state = 1;
+			end
+      if(state == 1) begin
+				if(fifo_busy == 0 && fifo_empty == 0 && out_finish) begin
+					isFinish = 0;
+					fifo_re = 1;
 					out_data = fifo_data;
-          state = 1;
-        end
-      end
-      else if(state == 1) begin
-        fifo_re = 0;
-        out_start = 1;
-        state = 2;
+					state = 2;        
+				end
       end
       else if(state == 2) begin
+        fifo_re = 0;
+        out_start = 1;
+        state = 3;
+      end
+      else if(state == 3) begin
         if(out_finish) begin
           out_start = 0;
-          state = 3;
+          state = 4;
         end
       end
       else begin
-        fifo_re = 0;
-        isFinish = 1;
 				state = 0;
       end
 			flushState = state;

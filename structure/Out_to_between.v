@@ -16,33 +16,40 @@ module Out_to_between(
   
   reg [7:0] forSent;
   reg [2:0] state;
-  reg [2:0] flushState;
+  reg [2:0] flush;
 	
-	Flush #(3) f1(flushState);
+	Flush #(3) f1(flush);
   
-  assign {t0,t1,t2,t3,t4,t5,t6,t7} = tsent ? forSent : 8'bX;
+  assign {t0,t1,t2,t3,t4,t5,t6,t7} = forSent;
   
   always @(posedge clk) begin
-    if(state == 0) begin
-      if(isStart) begin
-        isFinish = 0;
-        forSent = data;
-        tsent = 1;
-        state = 1;
-      end
-    end
-    else if(state == 1) begin
+		if(state == 0) begin
+      tsent = 0;
+      isFinish = 1;
+			if(isStart) begin
+				state = 1;
+				forSent = data;
+			end
+		end
+		else if(state == 1) begin
+			isFinish = 0;
+			tsent = 1;
+			state = 2;
+		end
+		else if(state == 2) begin
+			tsent = 1;
+			state = 3;
+		end
+    else if(state == 3) begin
       if(trecieve) begin
         tsent = 0;
-        state = 2;
+        state = 4;
       end
     end
     else begin
       state = 0;
-      tsent = 0;
-      isFinish = 1;
     end
-    flushState = state;
+    flush = state;
   end
   
 endmodule

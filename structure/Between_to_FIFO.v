@@ -17,8 +17,7 @@ module Between_to_FIFO(
   input fifo_busy,
   input clk,
   input enable,
-  input reset,
-	output reg [7:0] debug );
+  input reset );
   
   reg [2:0] state;
   reg crcEnable;
@@ -40,7 +39,6 @@ module Between_to_FIFO(
 				fifo_we = 0;
 				trecieve = 0;
 				isFinish = 1;
-				debug = forSent;
 				state = 1;
 			end
 			1 : begin

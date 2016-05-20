@@ -85,8 +85,7 @@ module Task1B(
     isFifoBusy,
     clk,
     betweenToFifoEnable,
-    reset,
-		debug
+    reset
   );
   
   FIFO_to_out fifoToOut(
@@ -122,7 +121,7 @@ module Task1B(
     outToComEnable
   );
   
-  SevenSegment svsg(a, b, c, d, e, f, g, numsl0, numsl1, numsl2, numsl3, clk_raw, 0, debug[7:4], debug[3:0], CRC[7:4], CRC[3:0]);
+  SevenSegment svsg(a, b, c, d, e, f, g, numsl0, numsl1, numsl2, numsl3, clk_raw, 0, outData[7:4], outData[3:0], CRC[7:4], CRC[3:0]);
   
   initial begin
     clk = 0;
@@ -134,7 +133,7 @@ module Task1B(
   always @(posedge clk_raw) begin
     clkcount = clkcount + 1;
 		clkUARTcount = clkUARTcount + 1;
-    if(clkUARTcount > 1302) begin
+    if(clkUARTcount > 1159) begin
       clkUARTcount = 0;
 			clk = !clk;
     end
