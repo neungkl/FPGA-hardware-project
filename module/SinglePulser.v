@@ -8,6 +8,7 @@ reg prev;
 
 initial begin
 	prev = 0;
+	q = 0;
 end
 
 always @(posedge clk) begin

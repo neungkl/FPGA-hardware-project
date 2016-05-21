@@ -37,10 +37,11 @@ module SD_CMD(
     if(state == 0) begin
       crcClear = 1;
       crcEnable = 0;
+			isFinish = 0;
+			isBusy = 0;
       DI = 1;
       if(isStart) begin
         isBusy = 1;
-        isFinish = 0;
         state = 1;
       end
     end
@@ -96,13 +97,11 @@ module SD_CMD(
     end
     else if(state == 9) begin
       DI = 1;
-      state = 10;
-    end
-    else if(state == 10) begin
-      DI = 1;
-      isFinish = 1;
-      isBusy = 0;
-      state = 0;
+			isFinish = 1;
+      isBusy = 1;
+			if(!isStart) begin
+				state = 0;
+			end
     end
     else state = 0;
   end

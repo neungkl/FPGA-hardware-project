@@ -32,6 +32,7 @@ module testSDCmd();
     argument = 0;
     isStart = 1;
     
+		#50000 $finish;
   end
   
   always begin
@@ -40,8 +41,10 @@ module testSDCmd();
   
   always @(posedge clk) begin
     if(isFinish) begin
-      #20; $finish;
-    end
+			isStart = 0;
+    end else if(!isStart) begin
+			isStart = 1;
+		end
   end
   
 endmodule
