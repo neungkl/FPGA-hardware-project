@@ -8,21 +8,22 @@ module Out_to_com(
   
   reg [2:0] state;
   wire parBit;
-  reg parEnable;
-  reg parReset;
 	
 	reg [7:0] data;
   
   reg [2:0] i;
 	
-  Parity par(parbit, tx, clk, parEnable, parReset);
+  assign parBit = ^data;
+	
+	initial begin
+		state <= 0;
+	end
   
   always @(posedge clk) begin
     if(enable) begin
       if(state == 0) begin
         if(isStart) begin
           isFinish = 0;
-          parReset = 0;
 					data = data_raw;
           state = 1;
         end
@@ -34,14 +35,12 @@ module Out_to_com(
       end
       else if(state == 2) begin
         tx = data[i];
-        parEnable = 1;
         if(i == 7) begin
           state = 3;
         end
         else i = i + 1;
       end
       else if(state == 3) begin
-        parEnable = 0;
         tx = parBit;
         state = 4;
       end
@@ -53,8 +52,6 @@ module Out_to_com(
         tx = 1;
 				isFinish = 1;
         state = 0;
-        parReset = 1;
-        parEnable = 0;
       end
     end
   end

@@ -21,7 +21,6 @@ module Task1B(
   output numsl2,
   output numsl3,
   output tx,
-  input rx,
   input pb5_raw,
   input clk_raw,
   input t0,
@@ -40,7 +39,7 @@ module Task1B(
   reg [16:0] clkcount;
   reg [11:0] clkUARTcount;
   reg clk;
-  wire clktrigger;
+  reg clktrigger;
   
   wire isFifoEmpty;
   wire isFifoBusy;
@@ -66,85 +65,99 @@ module Task1B(
   
   wire [7:0] fifoDataIn;
   wire [7:0] fifoDataOut;
-  
-  assign clktrigger = clkcount[16];
 	
   wire [7:0] debug;
 	
-  SinglePulser sp1(pb5, pb5_raw, clktrigger);
+  SinglePulser sp1(.q(pb5), .d(pb5_raw), .clk(clk_raw), .clk_trigger(clktrigger));
   
   Between_to_FIFO betweenToFifo(
-    isBetweenToFifoFinish,
-    CRC,
-    dataError,
-    fifoDataIn,
-    fifoWe,
-    trecieve,
-    t0, t1, t2, t3, t4, t5, t6, t7,
-    tsent,
-    isFifoBusy,
-    clk,
-    betweenToFifoEnable,
-    reset
+    .isFinish(isBetweenToFifoFinish),
+    .CRC(CRC),
+    .error(dataError),
+    .forSent(fifoDataIn),
+    .fifo_we(fifoWe),
+    .trecieve(trecieve),
+    .t0(t0), .t1(t1), .t2(t2), .t3(t3), .t4(t4), .t5(t5), .t6(t6), .t7(t7),
+    .tsent(tsent),
+    .fifo_busy(isFifoBusy),
+    .clk(clk),
+    .enable(betweenToFifoEnable),
+    .reset(reset)
   );
   
   FIFO_to_out fifoToOut(
-    isFifoToOutFinish, 
-    fifoRe, 
-    outData, 
-    isOutStart, 
-    isFifoBusy, 
-    isFifoEmpty, 
-    fifoDataOut, 
-    isOutToComFinish, 
-    clk, 
-    fifoToOutEnable
+    .isFinish(isFifoToOutFinish), 
+    .fifo_re(fifoRe), 
+    .out_data(outData), 
+    .out_start(isOutStart), 
+    .fifo_busy(isFifoBusy), 
+    .fifo_empty(isFifoEmpty), 
+    .fifo_data(fifoDataOut), 
+    .out_finish(isOutToComFinish), 
+    .clk(clk), 
+    .enable(fifoToOutEnable)
   );
+	
+	Out_to_com outToCom(
+    .isFinish(isOutToComFinish), 
+    .tx(tx), 
+    .isStart(isOutStart), 
+    .data_raw(outData), 
+    .clk(clk), 
+    .enable(outToComEnable)
+  );
+	
   FIFO fo(
-    fifoDataIn, 
-    fifoDataOut, 
-    fifoCount, 
-    isFifoEmpty, 
-    isFifoBusy, 
-    isFull, 
-    fifoRe, 
-    fifoWe, 
-    clk, 
-    reset
-  );
-  Out_to_com outToCom(
-    isOutToComFinish, 
-    tx, 
-    isOutStart, 
-    outData, 
-    clk, 
-    outToComEnable
+    .dataIn(fifoDataIn), 
+    .dataOut(fifoDataOut), 
+    .count(fifoCount), 
+    .isEmpty(isFifoEmpty), 
+    .isBusy(isFifoBusy), 
+    .isFull(isFull), 
+    .re(fifoRe), 
+    .we(fifoWe), 
+    .clk(clk), 
+    .reset(reset)
   );
   
-  SevenSegment svsg(a, b, c, d, e, f, g, numsl0, numsl1, numsl2, numsl3, clk_raw, 0, outData[7:4], outData[3:0], CRC[7:4], CRC[3:0]);
+  SevenSegment svsg(
+		.a(a), .b(b), .c(c), .d(d), .e(e), .f(f), .g(g), 
+		.sg0(numsl0), .sg1(numsl1), .sg2(numsl2), .sg3(numsl3), 
+		.clk(clk_raw), 
+		.mode(4'b1), 
+		.num0(outData[7:4]), 
+		.num1(outData[3:0]), 
+		.num2(CRC[7:4]), 
+		.num3(CRC[3:0])
+	);
   
   initial begin
-    clk = 0;
-    clkcount = 0;
-    clkUARTcount = 0;
-    reset = 1;
+    clk <= 0;
+    clkcount <= 0;
+    clkUARTcount <= 0;
+    reset <= 1;
   end
   
   always @(posedge clk_raw) begin
-    clkcount = clkcount + 1;
-		clkUARTcount = clkUARTcount + 1;
+    clkcount <= clkcount + 1;
+		clktrigger <= clkcount[16];
     if(clkUARTcount > 1159) begin
-      clkUARTcount = 0;
-			clk = !clk;
+      clkUARTcount <= 0;
+			clk <= !clk;
     end
+		else begin
+			clkUARTcount <= clkUARTcount + 1;
+		end
   end
 	
-	always @(posedge clktrigger) begin
-		if(pb5) begin
-			reset = 1;
-		end
-		else begin
-			reset = 0;
+	always @(posedge clk_raw) begin
+		if(clktrigger) begin
+			if(pb5) begin
+				reset = 1;
+			end
+			else begin
+				reset = 0;
+			end
 		end
     
     fifoToOutEnable = 1;

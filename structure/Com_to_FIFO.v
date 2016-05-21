@@ -9,12 +9,12 @@ module COM_to_FIFO(
   input fifo_busy,
   input clk,
   input enable,
-  input reset );
+  input reset,
+	output reg [2:0] state );
   
 	wire [7:0] fifo_data;
   wire isGetSending;
   reg isGetRecieved;
-  reg [2:0] state;
   reg crcEnable;
   reg crcBit;
   
@@ -29,37 +29,39 @@ module COM_to_FIFO(
     if(enable) begin
       if(state == 0) begin
         if(isGetSending == 1) begin
+					isFinish = 0;
           fifo_data_out = fifo_data;
           isGetRecieved = 1;
-          state = 1;
+          state = 3'o1;
         end
       end
       else if(state == 1) begin
         if(isGetSending == 0) begin
           isGetRecieved = 0;
-          state = 2;
+          state = 3'o2;
         end
       end
       else if(state == 2) begin
         if(fifo_busy == 0) begin
           fifo_we = 1;
-          state = 3;
+          state = 3'o3;
         end
       end
       else if(state == 3) begin
         fifo_we = 0;
-        i = 7;
-        state = 4;
+        i = 3'o7;
+        state = 3'o4;
       end
       else if(state == 4) begin
         crcBit = fifo_data_out[i];
 				crcEnable = 1;
         if(i == 0) begin
-          state = 5;
+          state = 3'o5;
         end
         else i = i - 1;
       end
       else begin
+				isFinish = 1;
         state = 0;
         fifo_we = 0;
         crcEnable = 0;

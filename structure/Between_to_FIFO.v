@@ -25,11 +25,11 @@ module Between_to_FIFO(
   
   reg [2:0] i;
   
-  reg [7:0] flush;
-	
-	Flush #(8) f1(flush);
-  
   CRC8 crc(CRC, crcBit, clk, crcEnable, reset);
+	
+	initial begin
+		state <= 0;
+	end
   
   always @(posedge clk) begin
     if(enable) begin
@@ -47,7 +47,6 @@ module Between_to_FIFO(
           i = 7;
 					isFinish = 0;
           forSent = {t0,t1,t2,t3,t4,t5,t6,t7};
-					flush = forSent;
           state = 2;
         end
 			end
@@ -79,8 +78,6 @@ module Between_to_FIFO(
 			end
 			default : state = 0;
 			endcase
-			
-      flush = state;
     end
   end
   

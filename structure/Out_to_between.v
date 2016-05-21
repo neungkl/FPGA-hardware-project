@@ -16,9 +16,6 @@ module Out_to_between(
   
   reg [7:0] forSent;
   reg [2:0] state;
-  reg [2:0] flush;
-	
-	Flush #(3) f1(flush);
   
   assign {t0,t1,t2,t3,t4,t5,t6,t7} = forSent;
   
@@ -27,29 +24,28 @@ module Out_to_between(
       tsent = 0;
       isFinish = 1;
 			if(isStart) begin
-				state = 1;
+				state = 3'o1;
 				forSent = data;
 			end
 		end
 		else if(state == 1) begin
 			isFinish = 0;
 			tsent = 1;
-			state = 2;
+			state = 3'o2;
 		end
 		else if(state == 2) begin
 			tsent = 1;
-			state = 3;
+			state = 3'o3;
 		end
     else if(state == 3) begin
       if(trecieve) begin
         tsent = 0;
-        state = 4;
+        state = 3'o4;
       end
     end
     else begin
       state = 0;
     end
-    flush = state;
   end
   
 endmodule
