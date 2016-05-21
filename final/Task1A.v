@@ -70,7 +70,7 @@ module Task1A(
 	
   wire [7:0] debug;
   
-  SinglePulser sp1(.q(pb5), .d(pb5_raw), .clk(clk_raw), .clk_trigger(clktrigger));
+  SinglePulser sp1(.q(pb5), .d(pb5_raw), .clk(clktrigger));
   COM_to_FIFO comToFifo(
     .isFinish(isComToFifoFinish), 
     .CRC(CRC), 

@@ -32,7 +32,7 @@ module testTask1B(
   
   assign {t0,t1,t2,t3,t4,t5,t6,t7} = buff;
   
-  SinglePulser sp(.q(pb4), .d(pb4_raw), .clk(clk_raw), .clk_trigger(clktrigger));
+  SinglePulser sp(.q(pb4), .d(pb4_raw), .clk(clktrigger));
   
   Task1B testModule(a, b, c, d, e, f, g, numsl0, numsl1, numsl2, numsl3, tx, pb5_raw, clk_raw, t0, t1, t2, t3, t4, t5, t6, t7, tsent, trecieve);
   

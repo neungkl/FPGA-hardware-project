@@ -68,7 +68,7 @@ module Task1B(
 	
   wire [7:0] debug;
 	
-  SinglePulser sp1(.q(pb5), .d(pb5_raw), .clk(clk_raw), .clk_trigger(clktrigger));
+  SinglePulser sp1(.q(pb5), .d(pb5_raw), .clk(clktrigger));
   
   Between_to_FIFO betweenToFifo(
     .isFinish(isBetweenToFifoFinish),

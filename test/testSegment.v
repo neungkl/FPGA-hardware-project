@@ -29,7 +29,7 @@ initial begin
   clkcount = 0;
 end
 
-SinglePulser sp1(dp1, dp1_raw, clktrigger);
+SinglePulser sp1(.q(dp1), .d(dp1_raw), .clk(clktrigger));
 SevenSegment svseg(a,b,c,d,e,f,g,numsl0,numsl1,numsl2,numsl3,clk,0,4,3,2,num);
 
 always @(posedge clk) begin

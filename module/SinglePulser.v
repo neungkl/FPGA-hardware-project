@@ -1,8 +1,7 @@
 module SinglePulser(
 	output reg q,
 	input d,
-	input wire clk,
-	input wire clk_trigger
+	input wire clk
 );
 
 reg prev;
@@ -12,11 +11,9 @@ initial begin
 end
 
 always @(posedge clk) begin
-	if(clk_trigger) begin
-		if(d == 1 && prev == 0) q <= 1;
-		else q <= 0;
-		prev <= d;
-	end
+	if(d == 1 && prev == 0) q <= 1;
+	else q <= 0;
+	prev <= d;
 end
 
 
