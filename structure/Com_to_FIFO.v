@@ -32,31 +32,31 @@ module COM_to_FIFO(
 					isFinish = 0;
           fifo_data_out = fifo_data;
           isGetRecieved = 1;
-          state = 3'o1;
+          state = 1;
         end
       end
       else if(state == 1) begin
         if(isGetSending == 0) begin
           isGetRecieved = 0;
-          state = 3'o2;
+          state = 2;
         end
       end
       else if(state == 2) begin
         if(fifo_busy == 0) begin
           fifo_we = 1;
-          state = 3'o3;
+          state = 3;
         end
       end
       else if(state == 3) begin
         fifo_we = 0;
-        i = 3'o7;
-        state = 3'o4;
+        i = 7;
+        state = 4;
       end
       else if(state == 4) begin
         crcBit = fifo_data_out[i];
 				crcEnable = 1;
         if(i == 0) begin
-          state = 3'o5;
+          state = 5;
         end
         else i = i - 1;
       end

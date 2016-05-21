@@ -27,28 +27,28 @@ module UART_Reciever(
 				index = 0;
 				error = 0;
 				sent = 0;
-				state = 3'o1;
+				state = 1;
 			end
 		end
 		else if(state == 1) begin
 			data[index] = rx;
 			if(index == 7) begin
-				state = 3'o2;
+				state = 2;
 			end
 			else index = index + 1;
 		end
 		else if(state == 2) begin
 			if(checkBit != rx) error = 1;
-			state = 3'o3;
+			state = 3;
 		end
 		else if(state == 3) begin
-			if(rx != 1) error = 3'o2;
-			state = 3'o4;
+			if(rx != 1) error = 2;
+			state = 4;
 		end
 		else if(state == 4) begin
 			if(error == 0) begin
 				sent = 1;
-				state = 3'o5;
+				state = 5;
 			end
 			else state = 0;
 		end

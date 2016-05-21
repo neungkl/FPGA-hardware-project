@@ -16,29 +16,29 @@ module FIFO_to_out(
 			if(state == 0) begin
 				fifo_re = 0;
         isFinish = 1;			
-				state = 3'o1;
+				state = 1;
 			end
       if(state == 1) begin
 				if(fifo_busy == 0 && fifo_empty == 0 && out_finish) begin
 					isFinish = 0;
 					fifo_re = 1;
 					out_data = fifo_data;
-					state = 3'o2;        
+					state = 2;        
 				end
       end
       else if(state == 2) begin
         fifo_re = 0;
         out_start = 1;
-        state = 3'o3;
+        state = 3;
       end
       else if(state == 3) begin
         if(out_finish) begin
           out_start = 0;
-          state = 3'o4;
+          state = 4;
         end
       end
       else begin
-				state = 3'o0;
+				state = 0;
       end
     end
   end

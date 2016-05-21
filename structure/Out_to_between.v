@@ -24,23 +24,23 @@ module Out_to_between(
       tsent = 0;
       isFinish = 1;
 			if(isStart) begin
-				state = 3'o1;
+				state = 1;
 				forSent = data;
 			end
 		end
 		else if(state == 1) begin
 			isFinish = 0;
 			tsent = 1;
-			state = 3'o2;
+			state = 2;
 		end
 		else if(state == 2) begin
 			tsent = 1;
-			state = 3'o3;
+			state = 3;
 		end
     else if(state == 3) begin
       if(trecieve) begin
         tsent = 0;
-        state = 3'o4;
+        state = 4;
       end
     end
     else begin
