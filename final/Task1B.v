@@ -124,7 +124,7 @@ module Task1B(
 		.a(a), .b(b), .c(c), .d(d), .e(e), .f(f), .g(g), 
 		.sg0(numsl0), .sg1(numsl1), .sg2(numsl2), .sg3(numsl3), 
 		.clk(clk_raw), 
-		.mode(4'b1), 
+		.mode(4'b0), 
 		.num0(outData[7:4]), 
 		.num1(outData[3:0]), 
 		.num2(CRC[7:4]), 
@@ -141,7 +141,7 @@ module Task1B(
   always @(posedge clk_raw) begin
     clkcount <= clkcount + 1;
 		clktrigger <= clkcount[16];
-    if(clkUARTcount > 1159) begin
+    if(clkUARTcount > 1172) begin
       clkUARTcount <= 0;
 			clk <= !clk;
     end

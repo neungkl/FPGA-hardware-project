@@ -2,13 +2,13 @@
 `include "../structure/Out_to_between.v"
 `include "../module/UART_Reciever.v"
 
-`include "../structure/FIFO_to_out.v"
-`include "../module/FIFO.v"
-`include "../module/SinglePulser.v"
-`include "../module/SevenSegment.v"
-`include "../module/CRC8.v"
-`include "../module/Parity.v"
-`include "../module/Flush.v"
+//`include "../structure/FIFO_to_out.v"
+//`include "../module/FIFO.v"
+//`include "../module/SinglePulser.v"
+//`include "../module/SevenSegment.v"
+//`include "../module/CRC8.v"
+//`include "../module/Parity.v"
+//`include "../module/Flush.v"
 
 module Task1A(
   output a,
@@ -123,11 +123,11 @@ module Task1A(
 		.a(a), .b(b), .c(c), .d(d), .e(e), .f(f), .g(g), 
 		.sg0(numsl0), .sg1(numsl1), .sg2(numsl2), .sg3(numsl3), 
 		.clk(clk_raw), 
-		.mode(4'b1), 
-		.num0(outData[7:4]), 
-		.num1(outData[3:0]), 
-		.num2(CRC[7:4]), 
-		.num3(CRC[3:0])
+		.mode(4'b0), 
+		.num0(CRC[7:4]), 
+		.num1(CRC[3:0]), 
+		.num2(outData[7:4]), 
+		.num3(outData[3:0])
 	);
   
   initial begin
@@ -143,7 +143,7 @@ module Task1A(
 	end
 	
 	always @(posedge clk_raw) begin
-    if(clkUARTcount > 1159) begin
+    if(clkUARTcount > 1172) begin
       clkUARTcount <= 0;
 			clk <= !clk;
     end

@@ -19,7 +19,7 @@ module FIFO_to_out(
 				state = 1;
 			end
       if(state == 1) begin
-				if(fifo_busy == 0 && fifo_empty == 0 && out_finish) begin
+				if(fifo_busy == 0 && fifo_empty == 0) begin
 					isFinish = 0;
 					fifo_re = 1;
 					out_data = fifo_data;

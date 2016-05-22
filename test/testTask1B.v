@@ -57,37 +57,35 @@ module testTask1B(
 		end
   end
   
-  always @(posedge clk_raw) begin
-		if(clk) begin
-			if(state == 0) begin
-				buff = 8'h41;
-				state = 1;
-				tsent = 0;
-			end
-			if(state == 1) begin
-				if(pb4) state = 2;
-			end
-			else if(state == 2) begin
-				if(!pb4) state = 3;
-			end
-			else if(state == 3) begin
-				tsent = 1;
-				state = 4;
-			end
-			else if(state == 4) begin
-				if(trecieve) begin
-					tsent = 0;
-					state = 5;
-				end
-			end
-			else if(state == 5) begin
-				buff = buff + 1;
-				state = 1;
-			end
-			else begin
-				state = 0;
-			end
-		end
+  always @(posedge clk) begin
+    if(state == 0) begin
+      buff = 8'h41;
+      state = 1;
+      tsent = 0;
+    end
+    if(state == 1) begin
+      if(pb4) state = 2;
+    end
+    else if(state == 2) begin
+      if(!pb4) state = 3;
+    end
+    else if(state == 3) begin
+      tsent = 1;
+      state = 4;
+    end
+    else if(state == 4) begin
+      if(trecieve) begin
+        tsent = 0;
+        state = 5;
+      end
+    end
+    else if(state == 5) begin
+      buff = buff + 1;
+      state = 1;
+    end
+    else begin
+      state = 0;
+    end
   end
   
 endmodule
