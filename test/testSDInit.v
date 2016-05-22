@@ -19,16 +19,17 @@ module testSDInit(
   output DI,
   output CS,
   input pb1_raw,
+  input pb5_raw,
   input clk_raw );
   
   wire [15:0] debug;
   
   reg [16:0] clkcount;
   reg clktrigger;
-  wire pb1;
+  wire pb1, pb5;
   
-  reg [3:0] checkStart;
   reg isInitStart;
+  reg reset;
   
   SD_Initial sdinit(
     .DO(DO),
@@ -37,6 +38,7 @@ module testSDInit(
     .CS(CS),
     .clk(clk_raw),
     .isStart(isInitStart),
+    .reset(reset),
     .debug(debug)
   );
   
@@ -51,14 +53,14 @@ module testSDInit(
 		.num3(debug[3:0])
 	);
   
-  SinglePulser sp1(.q(pb1), .d(pb1_raw), .clk(clktrigger));
+  SinglePulser sp1(.q(pb5), .d(pb5_raw), .clk(clktrigger));
+  SinglePulser sp2(.q(pb1), .d(pb1_raw), .clk(clktrigger));
   
 	reg [2:0] state;
 	
   initial begin
     isInitStart = 0;
     clkcount = 0;
-    checkStart = 0;
 		state = 0;
   end
   
@@ -69,13 +71,18 @@ module testSDInit(
   
   always @(posedge clktrigger) begin
 		if(state == 0) begin
+      reset = 1;
+      isInitStart = 0;
 			if(pb1) state = 1;
 		end
 		else if(state == 1) begin
 			if(pb1) begin
+        reset = 0;
 				isInitStart = 1;
-				checkStart = 14;
 			end
+      else if(pb5) begin
+        state = 0;
+      end
 		end
 		else state = 0;
   end

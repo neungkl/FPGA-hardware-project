@@ -26,6 +26,7 @@ module SD_RP(
 					response = 0;
 					case(cmd)
 					8 : i = 38;
+					58 : i = 38;
 					default : i = 6;
 					endcase
 					state = 1;

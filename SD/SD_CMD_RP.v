@@ -18,6 +18,7 @@ module SD_CMD_RP(
   
   wire sdRPNewResponse;
   
+  reg [11:0] count;
   reg reset = 0;
   
   SD_CMD sdcmd(
@@ -55,33 +56,47 @@ module SD_CMD_RP(
       if(isStart) begin
         isBusy = 1;
         reset = 0;
+        count = 0;
         state = 1;
       end
     end
     else if(state == 1) begin
-      if(!sdCMDBusy) begin
-        sdCMDStart = 1;
+      if(count > 6) begin
+        count = 0;
         state = 2;
       end
+      else count = count + 1;
     end
     else if(state == 2) begin
-      if(sdCMDFinish) begin
+      if(!sdCMDBusy) begin
+        sdCMDStart = 1;
         state = 3;
       end
     end
     else if(state == 3) begin
-      if(sdRPNewResponse) begin
-        response = response_raw;
+      if(sdCMDFinish) begin
         state = 4;
       end
     end
     else if(state == 4) begin
-      sdCMDStart = 0;
-      if(!sdCMDBusy) begin
+      if(sdRPNewResponse) begin
+        response = response_raw;
         state = 5;
       end
+      else if(count > 2000) begin
+        count = 0;
+        response = 40'hFFFFFFFFFF;
+        state = 5;
+      end
+      else count = count + 1;
     end
     else if(state == 5) begin
+      sdCMDStart = 0;
+      if(!sdCMDBusy) begin
+        state = 6;
+      end
+    end
+    else if(state == 6) begin
       isFinish = 1;
       reset = 1;
       if(!isStart) begin

@@ -10,6 +10,7 @@ module SD_Initial(
   input isStart,
   output reg isFinish,
   input clk,
+  input reset,
   output [15:0] debug );
   
   reg [5:0] state;
@@ -32,6 +33,7 @@ module SD_Initial(
   wire [39:0] sdCMDRPResponse;
   
   assign debug = {sdCMDRPResponse[7:0], 2'b0, state[5:0]};
+  //assign debug = {sdCMDRPResponse[15:0]};
   
   SD_CMD_RP SDCMDRP(
     .index(sdIndex),
@@ -68,10 +70,18 @@ module SD_Initial(
   
   always @(posedge clk) begin
   
+    if(reset) begin
+      isFinish = 0;
+      sdCMDRPStart = 0;
+      state = 0;
+    end
+    else begin
+  
     if(state == 0) begin
       DI = 1;
       CS = 1;
       count = 0;
+      isFinish = 0;
       sdCMDRPStart = 0;
       
       if(isStart) begin
@@ -148,6 +158,7 @@ module SD_Initial(
     end
     else if(state == 9) begin
       // Sent CMD55
+      DI = 1;
       if(!sdCMDRPBusy) begin
         sdIndex = 55;
         sdArgument = 0;
@@ -173,7 +184,7 @@ module SD_Initial(
       // Sent CMD41
       if(!sdCMDRPBusy) begin
         sdIndex = 41;
-        sdArgument = 32'h00100000;
+        sdArgument = 32'h40000000;
         sdCMDRPStart = 1;
         state = 13;
       end
@@ -189,53 +200,75 @@ module SD_Initial(
       // Check response CMD41
       DI = 1;
       if(sdCMDRPResponse == 40'h0000000000) begin
-        state = 15;
+        state = 16;
       end
-      else state = 9;
+      else state = 15;
     end
     else if(state == 15) begin
-      
-    end
-    /*
-    else if(state == 11) begin
-      // Sent ACMD41
-      if(!sdCMDBusy) begin
-        sdIndex = 41;
-        sdArgument = 32'h00100000;
-        sdCMDStart = 1;
-        sdRPRecieved = 0;
-        state = 12;
+      if(clk250khzTrigger) begin
+        if(count > 15000) begin
+          count = 0;
+          state = 9;
+        end
+        else count = count + 1;
       end
     end
-    else if(state == 12) begin
-      DI = sdCMDDI;
-      if(sdCMDFinish) begin
-        sdCMDStart = 0;
-        state = 13;
+    else if(state == 16) begin
+      // Sent CMD58
+      if(!sdCMDRPBusy) begin
+        sdIndex = 58;
+        sdArgument = 0;
+        sdCMDRPStart = 1;
+        state = 17;
       end
     end
-    else if(state == 13) begin
-      // Wait response ACMD41
+    else if(state == 17) begin
+      DI = sdCMDRPDI;
+      if(sdCMDRPFinish) begin
+        sdCMDRPStart = 0;
+        state = 18;
+      end
+    end
+    else if(state == 18) begin
+      // Check response CMD58
       DI = 1;
-      if(sdRPNewResponse) begin
-				sdRPRecieved = 1;
-				state = 14;
-			end
+      state = 19;
+      /*if(sdCMDRPResponse[30] == 0) begin
+        state = 19;
+      end
+      else state = 22;*/
     end
-    else if(state == 14) begin
-			if(!sdRPNewResponse) begin
-				sdRPRecieved = 0;
-				if(sdRPResponse == 0) begin
-					state = 15;
-				end
-				else state = 7;
-			end			
+    else if(state == 19) begin
+      // Sent CMD16
+      if(!sdCMDRPBusy) begin
+        sdIndex = 16;
+        sdArgument = 32'h00000001;
+        sdCMDRPStart = 1;
+        state = 20;
+      end
     end
-		else if(state == 15) begin
-		end*/
+    else if(state == 20) begin
+      DI = sdCMDRPDI;
+      if(sdCMDRPFinish) begin
+        sdCMDRPStart = 0;
+        state = 21;
+      end
+    end
+    else if(state == 21) begin
+      DI = 1;
+      if(sdCMDRPResponse == 0) begin
+        state = 22;
+      end
+    end
+    else if(state == 22) begin
+      isFinish = 1;
+    end
     else begin
       state = 0;
     end
+    
+    end
+    
   end
 
 endmodule

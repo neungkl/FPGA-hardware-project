@@ -30,9 +30,11 @@ module FIFO(dataIn, dataOut, count, isEmpty, isBusy, isFull, re, we, clk, reset)
     end
     else begin
       if(we) begin
-        mem[last] = dataIn;
-        last = last + 1;
-				count = count + 1;
+        if(!isFull) begin
+          mem[last] = dataIn;
+          last = last + 1;
+          count = count + 1;
+        end
       end
 			if(re) begin
 				if(isEmpty == 0) begin
