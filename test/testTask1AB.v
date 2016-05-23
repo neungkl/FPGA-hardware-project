@@ -1,5 +1,5 @@
 `include "../final/Task1B.v"
-`include "../final/Task1ADummy.v"
+`include "../final/Task1A.v"
 
 module testTask1AB(
   output a,

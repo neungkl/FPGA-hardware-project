@@ -10,6 +10,8 @@
 `include "../module/Parity.v"
 `include "../module/Flush.v"
 
+`include "../final/clockConstant.v"
+
 module Task2A(
   output a,
   output b,
@@ -156,7 +158,7 @@ module Task2A(
 	end
 	
 	always @(posedge clk_raw) begin
-    if(clkUARTcount > 1159) begin
+    if(clkUARTcount > `UART_COUNTER_RATE) begin
       clkUARTcount <= 0;
 			clk <= !clk;
     end

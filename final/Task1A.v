@@ -2,6 +2,9 @@
 `include "../structure/Out_to_between.v"
 `include "../module/UART_Reciever.v"
 
+`ifdef TASK1_MAIN_MODULE
+`else
+
 `include "../structure/FIFO_to_out.v"
 `include "../module/FIFO.v"
 `include "../module/SinglePulser.v"
@@ -9,6 +12,10 @@
 `include "../module/CRC8.v"
 `include "../module/Parity.v"
 `include "../module/Flush.v"
+`include "../final/clockConstant.v"
+`define TASK1_MAIN_MODULE 1
+
+`endif
 
 module Task1A(
   output a,
@@ -143,7 +150,7 @@ module Task1A(
 	end
 	
 	always @(posedge clk_raw) begin
-    if(clkUARTcount > 1159) begin
+    if(clkUARTcount > `UART_COUNTER_RATE) begin
       clkUARTcount <= 0;
 			clk <= !clk;
     end

@@ -1,12 +1,20 @@
 `include "../structure/Out_to_com.v"
-`include "../structure/FIFO_to_out.v"
 `include "../structure/Between_to_FIFO.v"
+
+`ifdef TASK1_MAIN_MODULE
+`else
+
+`include "../structure/FIFO_to_out.v"
 `include "../module/FIFO.v"
 `include "../module/SinglePulser.v"
 `include "../module/SevenSegment.v"
-`include "../module/Flush.v"
-`include "../module/Parity.v"
 `include "../module/CRC8.v"
+`include "../module/Parity.v"
+`include "../module/Flush.v"
+`include "../final/clockConstant.v"
+`define TASK1_MAIN_MODULE 1
+
+`endif
 
 module Task1B(
   output a,
@@ -141,7 +149,7 @@ module Task1B(
   always @(posedge clk_raw) begin
     clkcount <= clkcount + 1;
 		clktrigger <= clkcount[16];
-    if(clkUARTcount > 1159) begin
+    if(clkUARTcount > `UART_COUNTER_RATE) begin
       clkUARTcount <= 0;
 			clk <= !clk;
     end
