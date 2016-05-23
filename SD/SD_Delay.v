@@ -1,10 +1,15 @@
 module SD_Delay(
-  input start,
-  output reg finish,
-  input [COUNT_SIZE-1:0] times,
-  input clk )
+  start,
+  finish,
+  times,
+  clk );
   
   parameter COUNT_SIZE = 4;
+	
+	input start;
+	output reg finish;
+	input [COUNT_SIZE-1:0] times;
+	input clk;
   
   reg [COUNT_SIZE-1:0] count;
   
@@ -29,7 +34,7 @@ module SD_Delay(
         finish <= 1;
         state <= 2;
       end
-      else count = count + 1;
+      else count <= count + 1;
     end
     else if(state == 2) begin
       if(!start) begin

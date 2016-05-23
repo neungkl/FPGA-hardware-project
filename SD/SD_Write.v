@@ -2,6 +2,8 @@
 `include "../SD/SD_RP.v"
 `include "../SD/SD_CMD_RP.v"
 `include "../SD/SD_Delay.v"
+`include "../SD/SD_Data_RP.v"
+`include "../SD/SD_Initial.v"
 
 module SD_Write(
   input DO,
@@ -15,12 +17,12 @@ module SD_Write(
   output sdInitFinish,
   input clk,
   input reset,
-  output [15:0] debug );
+  output reg [15:0] debug );
   
   parameter MEM_SIZE = 9;
   parameter END_TOKEN = 8'h2D;
   
-  integer ADDR_SIZE = (1 << MEM_SIZE) - 1;
+  parameter ADDR_SIZE = (1 << MEM_SIZE) - 1;
   
   reg [5:0] state;
   reg [2:0] state2;
@@ -38,11 +40,16 @@ module SD_Write(
   reg sentBegin;
   reg sentFinish;
   
+  reg [9:0] blockNumber;
+  
+  reg [5:0] sdIndex;
+  reg [31:0] sdArgument;
+	
   wire sdInitSCLK;
   wire sdInitDI;
   wire sdInitCS;
-  
-  assign SCLK = (state == 0) ? sdInitSCLK : clk;
+	
+	assign SCLK = (state == 0) ? sdInitSCLK : clk;
   
   SD_Initial sdInit(
     .DO(DO),
@@ -69,10 +76,10 @@ module SD_Write(
   reg [5:0] sdCMDRPIndex;
   reg [31:0] sdCMDRPArgument;
   reg sdCMDRPStart;
+	wire sdCMDRPDI;
   wire sdCMDRPBusy;
   wire sdCMDRPFinish;
   wire sdCMDRP_RPFinish;
-  reg sdCMDRPDI;
   wire [39:0] sdCMDRPResponse;
   
   SD_CMD_RP sdCMDRP(
@@ -88,73 +95,90 @@ module SD_Write(
     .clk(SCLK)
   );
   
-  reg [5:0] blockNumber;
+  reg sdDataRPReset;
+  wire [3:0] sdDataRPStatus;
+  wire sdDataRPFinish;
+  
+  SD_Data_RP sdDataRP(
+    .DO(DO),
+    .isStart(sdCMDRP_RPFinish),
+    .isFinish(sdDataRPFinish),
+    .status(sdDataRPStatus),
+    .clk(SCLK),
+    .reset(sdDataRPReset) 
+  );
   
   initial begin
-    foFinish <= 1;
-    id <= 0;
-    state <= 0;
-    state2 <= 0;
-    sentBegin <= 0;
-    sentFinish <= 0;
-    sdCMDRPStart <= 0;
-    blockNumber <= 4;
-    i <= 0;
+    foFinish = 1;
+    id = 0;
+    state = 0;
+    state2 = 0;
+    sentBegin = 0;
+    sentFinish = 0;
+    sdCMDRPStart = 0;
+    blockNumber = 16;
+    sdDataRPReset = 1;
+    i = 0;
   end
   
   always @(posedge clk) begin
     if(reset) begin
-      foFinish <= 1;
-      id <= 0;
-      state <= 0;
-      state2 <= 0;
-      sentBegin <= 0;
-      sentFinish <= 0;
-      sdCMDRPStart <= 0;
-      blockNumber <= 4;
-      i <= 0;
+      state2 = 0;
+      id = 0;
+      foFinish = 1;
+    end 
+    else begin
+      if(state2 == 0) begin
+        foFinish = 1;
+        sentBegin = 0;
+        if(foStart) begin
+          foData = foData_raw;
+          foFinish = 0;
+          state2 = 1;
+        end
+      end
+      else if(state2 == 1) begin
+        data[id] = foData;
+        if(id == ADDR_SIZE || foData == END_TOKEN) begin
+          state2 = 2;
+        end
+        else begin
+          id = id + 1;
+          state2 = 3;
+        end
+      end
+      else if(state2 == 2) begin
+        sentBegin = 1;
+        if(sentFinish) begin
+          sentBegin = 0; 
+          id = 0;
+          state2 = 3;
+        end
+      end
+      else if(state2 == 3) begin
+        foFinish = 1;
+        if(!foStart) begin
+          state2 = 0;
+        end
+      end
+      else state2 = 0;
+    end
+  end
+  
+  always @(posedge clk) begin
+  
+    if(reset) begin
+      state = 0;
+      sentFinish = 0;
+      sdCMDRPStart = 0;
+      blockNumber = 16;
+      sdDataRPReset = 1;
+      isFinish = 0;
+      i = 0;
     end
     else begin
     
-    if(state2 == 0) begin
-      foFinish <= 1;
-      sentBegin <= 0;
-      sentFinish <= 0;
-      if(foStart) begin
-        foData = foData_raw;
-        foFinish = 0;
-        state2 = 1;
-      end
-    end
-    else if(state2 == 1) begin
-      data[id] = foData;
-      if(id == ADDR_SIZE || foData == END_TOKEN) begin
-        state2 = 2;
-      end
-      else
-        id = id + 1;
-        state2 = 3;
-      end
-    end
-    else if(state2 == 2) begin
-      sentBegin = 1;
-      if(sentFinish) begin
-        sentBegin = 0;
-        sentFinish = 0; 
-        id = 0;
-        state2 = 3;
-      end
-    end
-    else if(state2 == 3) begin
-      foFinish = 1;
-      if(!foStart) begin
-        state2 = 0;
-      end
-    end
-    else state2 = 0;
-    
     if(state == 0) begin
-      sdCMDRPStart <= 0;
       DI = sdInitDI;
       CS = sdInitCS;
       if(sdInitFinish) begin
@@ -172,6 +196,8 @@ module SD_Write(
       end
     end
     else if(state == 2) begin
+      sdCMDRPStart = 0;
+      sdDataRPReset = 1;
       if(sentBegin) begin
         state = 3;
       end
@@ -193,6 +219,7 @@ module SD_Write(
         sdIndex = 24;
         sdArgument = blockNumber;
         sdCMDRPStart = 1;
+        sdDataRPReset = 0;
         state = 5;
       end
     end
@@ -205,7 +232,7 @@ module SD_Write(
     end
     else if(state == 6) begin
       DI = 1;
-      if(sdCMDRPResponse == 40'hFFFFFFFFFF) begin
+      if(sdCMDRPResponse == 0) begin
         state = 7;
       end
     end
@@ -262,12 +289,34 @@ module SD_Write(
     // End Sent Data Packet Flow
     
     else if(state == 12) begin
+      if(sdDataRPFinish) begin
+        sdDataRPReset = 1;
+        state = 13;
+      end
     end
+    else if(state == 13) begin
+      if(sdDataRPStatus == 4'b0101) begin
+        state = 14;
+      end
+    end
+    else if(state == 14) begin
+      sentFinish = 1;
+      isFinish = 1;
+      if(!sentBegin) begin
+        state = 15;
+      end
+    end
+    else if(state == 15) begin
+      
+    end
+      
     else state = 0;
     
     // END Program
     end
-     
+    
+    debug = {sdCMDRPResponse[7:0], 2'b00, state[5:0]};
+    
   end
   
 endmodule

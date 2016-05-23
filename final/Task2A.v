@@ -1,16 +1,16 @@
 `include "../structure/COM_to_FIFO.v"
-`include "../structure/Out_to_between.v"
 `include "../module/UART_Reciever.v"
+`include "../SD/SD_Write.v"
 
-//`include "../structure/FIFO_to_out.v"
-//`include "../module/FIFO.v"
-//`include "../module/SinglePulser.v"
-//`include "../module/SevenSegment.v"
-//`include "../module/CRC8.v"
-//`include "../module/Parity.v"
-//`include "../module/Flush.v"
+`include "../structure/FIFO_to_out.v"
+`include "../module/FIFO.v"
+`include "../module/SinglePulser.v"
+`include "../module/SevenSegment.v"
+`include "../module/CRC8.v"
+`include "../module/Parity.v"
+`include "../module/Flush.v"
 
-module Task1A(
+module Task2A(
   output a,
   output b,
   output c,
@@ -24,18 +24,13 @@ module Task1A(
   output numsl3,
   output tx,
   input rx,
+  input DO,
+  output SCLK,
+  output DI,
+  output CS,
+  output L7,
   input pb5_raw,
-  input clk_raw,
-  output t0,
-  output t1,
-  output t2,
-  output t3,
-  output t4,
-  output t5,
-  output t6,
-  output t7,
-  output tsent,
-  input trecieve );
+  input clk_raw );
   
   wire pb5;
   
@@ -54,7 +49,7 @@ module Task1A(
   
   wire isComToFifoFinish;
   wire isFifoToOutFinish;
-  wire isOutToBeetweenFinish;
+  wire isOutToSDFinish;
   
   wire [3:0] comToFifoError;
   wire [7:0] CRC;
@@ -69,7 +64,7 @@ module Task1A(
   wire [7:0] fifoDataIn;
   wire [7:0] fifoDataOut;
 	
-  wire [7:0] debug;
+  wire [15:0] debug;
   
   SinglePulser sp1(.q(pb5), .d(pb5_raw), .clk(clktrigger));
   COM_to_FIFO comToFifo(
@@ -105,29 +100,47 @@ module Task1A(
     .fifo_busy(isFifoBusy), 
     .fifo_empty(isFifoEmpty), 
     .fifo_data(fifoDataOut), 
-    .out_finish(isOutToBeetweenFinish), 
+    .out_finish(isOutToSDFinish), 
     .clk(clk), 
     .enable(fifoToOutEnable)
   );
-  Out_to_between outToBetween(
-    .isFinish(isOutToBeetweenFinish), 
-    .t0(t0), .t1(t1), .t2(t2), .t3(t3), .t4(t4), .t5(t5), .t6(t6), .t7(t7),
-    .tsent(tsent),
-    .trecieve(trecieve),
-    .isStart(isOutStart),
-    .data(outData),
-    .clk(clk)
+  
+  // Out_to_between outToBetween(
+  //   .isFinish(isOutToSDFinish), 
+  //   .t0(t0), .t1(t1), .t2(t2), .t3(t3), .t4(t4), .t5(t5), .t6(t6), .t7(t7),
+  //   .tsent(tsent),
+  //   .trecieve(trecieve),
+  //   .isStart(isOutStart),
+  //   .data(outData),
+  //   .clk(clk)
+  // );
+  
+  wire isSDWriteFinish;
+  
+  SD_Write sdWrite(
+    .DO(DO),
+    .SCLK(SCLK),
+    .DI(DI),
+    .CS(CS),
+    .isFinish(isSDWriteFinish),
+    .foData_raw(outData),
+    .foStart(isOutStart),
+    .foFinish(isOutToSDFinish),
+    .sdInitFinish(L7),
+    .clk(clk_raw),
+    .reset(reset),
+    .debug(debug)
   );
   
   SevenSegment svsg(
 		.a(a), .b(b), .c(c), .d(d), .e(e), .f(f), .g(g), 
 		.sg0(numsl0), .sg1(numsl1), .sg2(numsl2), .sg3(numsl3), 
 		.clk(clk_raw), 
-		.mode(4'b0), 
-		.num0(CRC[7:4]), 
-		.num1(CRC[3:0]), 
-		.num2(outData[7:4]), 
-		.num3(outData[3:0])
+		.mode(4'b1), 
+		.num0(debug[7:4]),
+		.num1(debug[3:0]),
+		.num2(debug[7:4]),
+		.num3(debug[3:0])
 	);
   
   initial begin
@@ -143,7 +156,7 @@ module Task1A(
 	end
 	
 	always @(posedge clk_raw) begin
-    if(clkUARTcount > 1129) begin
+    if(clkUARTcount > 1159) begin
       clkUARTcount <= 0;
 			clk <= !clk;
     end
