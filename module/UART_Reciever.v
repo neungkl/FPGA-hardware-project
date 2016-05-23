@@ -21,8 +21,7 @@ module UART_Reciever(
 		state = 0;
 	end
 	
-  always @(posedge clk) begin
-		
+	always @(posedge clk) begin
 		if(sent == 0) begin
 			if(state == 3 && error == 0) begin
 				sent <= 1;
@@ -33,31 +32,32 @@ module UART_Reciever(
 				sent <= 0;
 			end
 		end
-		
+	end
+	
+  always @(posedge clk) begin
 		if(state == 0) begin
 			if(rx == 0) begin
-				index <= 0;
-				error <= 0;
-				state <= 1;
+				index = 0;
+				error = 0;
+				state = 1;
 			end
 		end
 		else if(state == 1) begin
-			data[index] <= rx;
+			data[index] = rx;
 			if(index == 7) begin
-				state <= 2;
+				state = 2;
 			end
-			else index <= index + 1;
+			else index = index + 1;
 		end
 		else if(state == 2) begin
-			if(checkBit != rx) error <= 1;
-			state <= 3;
+			if(checkBit != rx) error = 1;
+			state = 3;
 		end
 		else if(state == 3) begin
-			if(rx != 1) error <= 2;
-			state <= 0;
+			if(rx != 1) error = 2;
+			state = 0;
 		end
-		else state <= 0;
-		
+		else state = 0;
   end
    
 endmodule
