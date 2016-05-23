@@ -149,7 +149,7 @@ module Task1B(
   always @(posedge clk_raw) begin
     clkcount <= clkcount + 1;
 		clktrigger <= clkcount[16];
-    if(clkUARTcount > `UART_COUNTER_RATE) begin
+    if(clkUARTcount >= `UART_COUNTER_RATE) begin
       clkUARTcount <= 0;
 			clk <= !clk;
     end

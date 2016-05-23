@@ -116,9 +116,11 @@ module SD_Write(
     sentBegin = 0;
     sentFinish = 0;
     sdCMDRPStart = 0;
+    sdDelayStart = 0;
     blockNumber = 16;
     sdDataRPReset = 1;
     i = 0;
+    j = 0;
   end
   
   always @(posedge clk) begin
@@ -172,9 +174,11 @@ module SD_Write(
       sentFinish = 0;
       sdCMDRPStart = 0;
       blockNumber = 16;
+      sdDelayStart = 0;
       sdDataRPReset = 1;
       isFinish = 0;
       i = 0;
+      j = 0;
     end
     else begin
     
