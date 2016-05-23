@@ -143,7 +143,7 @@ module Task1A(
 	end
 	
 	always @(posedge clk_raw) begin
-    if(clkUARTcount > 1129) begin
+    if(clkUARTcount > 1159) begin
       clkUARTcount <= 0;
 			clk <= !clk;
     end

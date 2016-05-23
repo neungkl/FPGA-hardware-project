@@ -9,29 +9,14 @@ module UART_Reciever(
   reg [2:0] index;
 	
   wire checkBit;
-	reg [9:0] data_raw;
-	reg isNewData;
+	reg [10:0] data_raw;
 	
-	assign checkBit = ^data_raw[8:1];
+	assign checkBit = ^data;
   
 	initial begin
 		error = 0;
 		sent = 0;
-		data_raw = 10'h3FF;
-		isNewData = 0;
-	end
-	
-	always @(posedge clk) begin
-		if(sent == 0) begin
-			if(isNewData && error == 0) begin
-				sent <= 1;
-			end
-		end
-		else begin
-			if(recieved) begin
-				sent <= 0;
-			end
-		end
+		data_raw = 11'h7FF;
 	end
 	
   always @(posedge clk) begin
@@ -39,16 +24,26 @@ module UART_Reciever(
 		data_raw = data_raw << 1;
 		data_raw[0] = rx;
 		
-		if(data_raw[9] == 0) begin
-			if(data[1] != checkBit) error = 1;
-			else if(data[0] != 1) error = 2;
-			
-			isNewData = 1;
-			data = data_raw[8:1];
+		if(sent) begin
+			if(recieved) begin
+				sent = 0;
+			end
 		end
 		
-		if(recieved) begin
-			isNewData = 0;
+		if(data_raw[10] == 0) begin
+			
+			error = 0;
+			data = {data_raw[2], data_raw[3], data_raw[4], data_raw[5], data_raw[6], data_raw[7], data_raw[8], data_raw[9]};
+			
+			//if(data_raw[1] != checkBit) error = 1;
+			//else 
+			//if(data_raw[0] != 1) error = 2;
+			
+			if(error == 0) begin
+				sent = 1;
+			end
+			
+			data_raw = 11'h7FF;
 		end
 		
   end
