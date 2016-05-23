@@ -97,6 +97,7 @@ module SD_CMD(
     end
     else if(state == 9) begin
       DI = 1;
+      crcClear = 1;
 			isFinish = 1;
       isBusy = 1;
 			if(!isStart) begin

@@ -22,6 +22,7 @@ module Out_to_com(
   always @(posedge clk) begin
     if(enable) begin
       if(state == 0) begin
+        isFinish = 1;
         if(isStart) begin
           isFinish = 0;
 					data = data_raw;

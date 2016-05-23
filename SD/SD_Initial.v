@@ -1,7 +1,3 @@
-`include "../SD/SD_CMD.v"
-`include "../SD/SD_RP.v"
-`include "../SD/SD_CMD_RP.v"
-
 module SD_Initial(
   input DO,
   output reg SCLK,
@@ -33,7 +29,7 @@ module SD_Initial(
   wire [39:0] sdCMDRPResponse;
   
   assign debug = {sdCMDRPResponse[7:0], 2'b0, state[5:0]};
-  //assign debug = {sdCMDRPResponse[15:0]};
+  //assign debug = {sdCMDRPResponse[31:16]};
   
   SD_CMD_RP SDCMDRP(
     .index(sdIndex),
@@ -155,6 +151,9 @@ module SD_Initial(
       if(sdCMDRPResponse[11:0] == 12'h01AA) begin
         state = 9;
       end
+      else if(sdCMDRPResponse[39:32] == 8'h09) begin
+        state = 6;
+      end
     end
     else if(state == 9) begin
       // Sent CMD55
@@ -177,90 +176,101 @@ module SD_Initial(
       // Check response CMD55
       DI = 1;
       if(sdCMDRPResponse == 40'h0000000001) begin
-        state = 12;
-      end
-    end
-    else if(state == 12) begin
-      // Sent CMD41
-      if(!sdCMDRPBusy) begin
-        sdIndex = 41;
-        sdArgument = 32'h40000000;
-        sdCMDRPStart = 1;
         state = 13;
       end
+			else if(sdCMDRPResponse == 40'hFFFFFFFFFF) begin
+				state = 12;
+			end
     end
-    else if(state == 13) begin
-      DI = sdCMDRPDI;
-      if(sdCMDRPFinish) begin
-        sdCMDRPStart = 0;
-        state = 14;
-      end
-    end
-    else if(state == 14) begin
-      // Check response CMD41
-      DI = 1;
-      if(sdCMDRPResponse == 40'h0000000000) begin
-        state = 16;
-      end
-      else state = 15;
-    end
-    else if(state == 15) begin
+    else if(state == 12) begin
       if(clk250khzTrigger) begin
-        if(count > 15000) begin
+        if(count > 60000) begin
           count = 0;
           state = 9;
         end
         else count = count + 1;
       end
     end
+    else if(state == 13) begin
+      // Sent CMD41
+      if(!sdCMDRPBusy) begin
+        sdIndex = 41;
+        sdArgument = 32'h40000000;
+        sdCMDRPStart = 1;
+        state = 14;
+      end
+    end
+    else if(state == 14) begin
+      DI = sdCMDRPDI;
+      if(sdCMDRPFinish) begin
+        sdCMDRPStart = 0;
+        state = 15;
+      end
+    end
+    else if(state == 15) begin
+      // Check response CMD41
+      DI = 1;
+      if(sdCMDRPResponse == 40'h0000000000) begin
+        state = 17;
+      end
+      else state = 16;
+    end
     else if(state == 16) begin
+      if(clk250khzTrigger) begin
+        if(count > 60000) begin
+          count = 0;
+          state = 9;
+        end
+        else count = count + 1;
+      end
+    end
+    else if(state == 17) begin
       // Sent CMD58
       if(!sdCMDRPBusy) begin
         sdIndex = 58;
         sdArgument = 0;
         sdCMDRPStart = 1;
-        state = 17;
-      end
-    end
-    else if(state == 17) begin
-      DI = sdCMDRPDI;
-      if(sdCMDRPFinish) begin
-        sdCMDRPStart = 0;
         state = 18;
       end
     end
     else if(state == 18) begin
-      // Check response CMD58
-      DI = 1;
-      state = 19;
-      /*if(sdCMDRPResponse[30] == 0) begin
-        state = 19;
-      end
-      else state = 22;*/
-    end
-    else if(state == 19) begin
-      // Sent CMD16
-      if(!sdCMDRPBusy) begin
-        sdIndex = 16;
-        sdArgument = 32'h00000001;
-        sdCMDRPStart = 1;
-        state = 20;
-      end
-    end
-    else if(state == 20) begin
       DI = sdCMDRPDI;
       if(sdCMDRPFinish) begin
         sdCMDRPStart = 0;
+        state = 19;
+      end
+    end
+    else if(state == 19) begin
+      // Check response CMD58
+      DI = 1;
+      if(sdCMDRPResponse[30] == 0) begin
+        state = 20;
+      end
+      else state = 23;
+    end
+    else if(state == 20) begin
+      // Sent CMD16
+      if(!sdCMDRPBusy) begin
+        sdIndex = 16;
+        sdArgument = 32'h00000200;
+        sdCMDRPStart = 1;
         state = 21;
       end
     end
     else if(state == 21) begin
-      DI = 1;
-      if(sdCMDRPResponse == 0) begin
+      DI = sdCMDRPDI;
+      if(sdCMDRPFinish) begin
+        sdCMDRPStart = 0;
         state = 22;
       end
     end
     else if(state == 22) begin
+      DI = 1;
+      if(sdCMDRPResponse == 0 || sdCMDRPResponse == 8'h40) begin
+        state = 23;
+      end
+    end
+    else if(state == 23) begin
       isFinish = 1;
     end
     else begin

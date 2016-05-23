@@ -3,6 +3,7 @@ module SD_RP(
   input [5:0] cmd,
   output reg isNewResponse,
   output reg [39:0] response,
+	output isRPFinish,
   input clk,
 	input reset );
   
@@ -13,12 +14,15 @@ module SD_RP(
     state = 0;
     response = 0;
   end
+	
+	assign isRPFinish = (i == 0);
   
   always @(posedge clk) begin
 		if(reset) begin
 			state = 0;
 			response = 40'hFFFFFFFFFF;
 			isNewResponse = 0;
+			i = 39;
 		end
 		else begin
 			if(state == 0) begin

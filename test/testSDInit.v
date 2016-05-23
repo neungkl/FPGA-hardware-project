@@ -2,6 +2,10 @@
 `include "../module/SevenSegment.v"
 `include "../module/SinglePulser.v"
 
+`include "../SD/SD_CMD.v"
+`include "../SD/SD_RP.v"
+`include "../SD/SD_CMD_RP.v"
+
 module testSDInit(
   output a,
   output b,
