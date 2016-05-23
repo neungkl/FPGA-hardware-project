@@ -19,7 +19,7 @@ module UART_Reciever(
 		data_raw = 11'h7FF;
 	end
 	
-  always @(posedge clk) begin
+  always @(negedge clk) begin
 		
 		data_raw = data_raw << 1;
 		data_raw[0] = rx;
