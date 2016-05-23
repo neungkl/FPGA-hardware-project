@@ -52,11 +52,13 @@ module SD_Initial(
   end  
   
   always @(posedge clk) begin
+    
+    SCLK <= clk250khz;
+    
     if(clk250khzCount >= 100) begin
       clk250khzCount <= 0;
       clk250khz <= !clk250khz;
       clk250khzTrigger <= 1;
-			SCLK <= clk250khz;
     end
     else begin
       clk250khzTrigger <= 0;

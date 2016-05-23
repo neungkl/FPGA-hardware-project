@@ -4,6 +4,7 @@ module SD_CMD_RP(
   input isStart,
   output reg isBusy,
   output reg isFinish,
+  output isRPFinish,
   output DI,
   input DO,
   output reg [39:0] response,
@@ -35,6 +36,7 @@ module SD_CMD_RP(
     .DO(DO),
     .cmd(index),
     .isNewResponse(sdRPNewResponse),
+    .isRPFinish(isRPFinish),
     .response(response_raw),
     .clk(clk),
     .reset(reset)
