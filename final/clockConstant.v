@@ -1,1 +1,1 @@
-`define UART_COUNTER_RATE 96
+`define UART_COUNTER_RATE 95

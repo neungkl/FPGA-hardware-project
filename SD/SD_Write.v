@@ -21,7 +21,6 @@ module SD_Write(
   
   parameter MEM_SIZE = 9;
   parameter END_TOKEN = 8'h2D;
-  
   parameter ADDR_SIZE = (1 << MEM_SIZE) - 1;
   
   reg [5:0] state;
