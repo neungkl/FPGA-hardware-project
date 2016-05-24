@@ -11,13 +11,15 @@ module SD_Read(
   output reg DI,
   output reg CS,
   input isStart,
+  output isInitSDFinish,
   output reg isFinish,
   output reg [7:0] foDataSent,
   output reg foWe,
   input foBusy,
+  input foFull,
   input clk,
   input reset,
-  output reg [15:0] debug );
+  output [15:0] debug );
   
   parameter MEM_SIZE = 9;
   parameter END_TOKEN = 8'h2D;
@@ -25,7 +27,6 @@ module SD_Read(
 
   reg [2:0] state;
   reg [2:0] state2;
-  reg [7:0] foData;
   
   reg [7:0] data [0:ADDR_SIZE];
   reg [MEM_SIZE:0] id;
@@ -33,7 +34,7 @@ module SD_Read(
   reg [MEM_SIZE:0] i;
   reg [3:0] j;
   reg [MEM_SIZE:0] i2;
-  reg [3:0] j2;
+  reg [7:0] dump;
   
   reg [7:0] dataToken;
   reg [15:0] CRC;
@@ -43,6 +44,21 @@ module SD_Read(
   wire sdInitSCLK;
   wire sdInitDI;
   wire sdInitCS;
+	wire sdInitFinish;
+  
+  assign isInitSDFinish = sdInitFinish;
+  
+  SD_Initial sdInit(
+    .DO(DO),
+    .SCLK(sdInitSCLK),
+    .DI(sdInitDI),
+    .CS(sdInitCS),
+    .isStart(1),
+    .isFinish(sdInitFinish),
+    .clk(clk),
+    .reset(reset),
+		.debug(debug)
+  );
 	
 	assign SCLK = (state == 0) ? sdInitSCLK : clk;
   
@@ -79,20 +95,21 @@ module SD_Read(
     .clk(SCLK)
   );
   
+  //assign debug = {sdCMDRPResponse[11:0], 1'b0, state[2:0]};
+  
   reg pushToFiFoFinish;
   
   initial begin
     state = 0;
     sdCMDRPStart = 0;
     sdDelayStart = 0;
-    blockNumber = 16;
-    sdDataRPReset = 1;
+    blockNumber = 4;
     isFinish = 0;
     i = 0;
     j = 0;
     i2 = 0;
-    j2 = 0;
     id = 0;
+    DI = 1;
     pushToFiFoFinish = 0;
   end
   
@@ -114,13 +131,14 @@ module SD_Read(
     else if(state2 == 1) begin
       if(!DO) begin
         j = 7;
+        i = 0;
         state2 = 2;
       end
     end
     else if(state2 == 2) begin
       data[i][j] = DO;
       if(j == 0) begin
-        if(i == ADDR_SIZE || data[i] == END_TOKEN) begin
+        if(i == ADDR_SIZE) begin
           state2 = 3;
         end
         else begin
@@ -145,16 +163,17 @@ module SD_Read(
       state = 0;
       foWe = 0;
       sdCMDRPStart = 0;
-      blockNumber = 16;
-      sdDataRPReset = 1;
+      blockNumber = 4;
       isFinish = 0;
       i = 0;
+			DI = 1;
     end
     else begin
     
     if(state == 0) begin
       DI = sdInitDI;
       CS = sdInitCS;
+      blockNumber = 4;
       isFinish = 0;
       if(sdInitFinish) begin
         state = 1;
@@ -163,17 +182,27 @@ module SD_Read(
     else if(state == 1) begin
       DI = 1;
       CS = 0;
-      if(isStart) begin
+      sdDelayTimes = 8'h0F;
+      sdDelayStart = 1;
+      if(sdDelayFinish) begin
+        sdDelayStart = 0;
         state = 2;
       end
     end
     else if(state == 2) begin
       if(DO) begin
         sdCMDRPStart = 0;
-        sdDataRPReset = 1;
         if(isStart) begin
           state = 3;
         end
+      end
+    end
+    else if(state == 3) begin
+      sdDelayTimes = 8'h0F;
+      sdDelayStart = 1;
+      if(sdDelayFinish) begin
+        sdDelayStart = 0;
+        state = 4;
       end
     end
     else if(state == 4) begin
@@ -181,10 +210,9 @@ module SD_Read(
       DI = 1;
       pushToFiFoFinish = 0;
       if(!sdCMDRPBusy) begin
-        sdIndex = 17;
-        sdArgument = blockNumber;
+        sdCMDRPIndex = 17;
+        sdCMDRPArgument = blockNumber;
         sdCMDRPStart = 1;
-        sdDataRPReset = 0;
         state = 5;
       end
     end
@@ -204,11 +232,37 @@ module SD_Read(
     else if(state == 7) begin
       // Wait for Data Complete
       if(state2 == 3) begin
+        i2 = 0;
         state = 8;
       end
     end
     else if(state == 8) begin
-      
+      if(!foBusy && !foFull) begin
+        foDataSent = data[i2];
+        foWe = 1;
+        state = 9;
+      end
+    end
+    else if(state == 9) begin
+      foWe = 0;
+      if(foDataSent == END_TOKEN) begin
+        state = 10;
+      end
+      else if(i2 == ADDR_SIZE) begin
+        state = 11;
+      end
+      else begin
+        i2 = i2 + 1;
+        state = 8;
+      end
+    end
+    else if(state == 10) begin
+      blockNumber = blockNumber + 1;
+      state = 2;
+    end
+    else if(state == 11) begin
+      pushToFiFoFinish = 1;
+      isFinish = 1;
     end
     else state = 0;
       

@@ -29,9 +29,9 @@ module UART_Sender(
       state <= 2;
     end
     else if(state == 2) begin
-      bitSent = data[i];
-      if(i == 7) state = 3;
-      else i = i + 1;
+      bitSent <= data[i];
+      if(i == 7) state <= 3;
+      else i <= i + 1;
     end
     else if(state == 3) begin
       bitSent <= parityBit;

@@ -107,16 +107,6 @@ module Task2A(
     .enable(fifoToOutEnable)
   );
   
-  // Out_to_between outToBetween(
-  //   .isFinish(isOutToSDFinish), 
-  //   .t0(t0), .t1(t1), .t2(t2), .t3(t3), .t4(t4), .t5(t5), .t6(t6), .t7(t7),
-  //   .tsent(tsent),
-  //   .trecieve(trecieve),
-  //   .isStart(isOutStart),
-  //   .data(outData),
-  //   .clk(clk)
-  // );
-  
   wire isSDWriteFinish;
   
   SD_Write sdWrite(
@@ -138,9 +128,9 @@ module Task2A(
 		.a(a), .b(b), .c(c), .d(d), .e(e), .f(f), .g(g), 
 		.sg0(numsl0), .sg1(numsl1), .sg2(numsl2), .sg3(numsl3), 
 		.clk(clk_raw), 
-		.mode(4'b1), 
-		.num0(debug[7:4]),
-		.num1(debug[3:0]),
+		.mode(4'b0), 
+		.num0(debug[15:12]),
+		.num1(debug[11:8]),
 		.num2(debug[7:4]),
 		.num3(debug[3:0])
 	);

@@ -56,6 +56,7 @@ module SD_CMD_RP(
       isFinish = 0;
       isBusy = 0;
       if(isStart) begin
+        response = 40'hFFFFFFFFFF;
         isBusy = 1;
         reset = 0;
         count = 0;
@@ -85,7 +86,7 @@ module SD_CMD_RP(
         response = response_raw;
         state = 5;
       end
-      else if(count > 2000) begin
+      else if(count > 100) begin
         count = 0;
         response = 40'hFFFFFFFFFF;
         state = 5;

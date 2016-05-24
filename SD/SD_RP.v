@@ -27,7 +27,7 @@ module SD_RP(
 		else begin
 			if(state == 0) begin
 				if(!DO) begin
-					response = 0;
+					response = 40'h00_0000_000F;
 					case(cmd)
 					8 : i = 38;
 					58 : i = 38;

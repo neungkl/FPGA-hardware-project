@@ -1,6 +1,6 @@
 module SD_Initial(
   input DO,
-  output reg SCLK,
+  output SCLK,
   output reg DI,
   output reg CS,
   input isStart,
@@ -28,7 +28,11 @@ module SD_Initial(
   wire sdCMDRPDI;
   wire [39:0] sdCMDRPResponse;
   
-  assign debug = {sdCMDRPResponse[7:0], 2'b0, state[5:0]};
+  reg readyToSwitchClock;
+  
+  assign SCLK = readyToSwitchClock ? clk : clk250khz;
+  
+  assign debug = {sdCMDRPResponse[39:32], 2'b0, state[5:0]};
   //assign debug = {sdCMDRPResponse[31:16]};
   
   SD_CMD_RP SDCMDRP(
@@ -49,11 +53,10 @@ module SD_Initial(
     clk250khz <= 0;
     clk250khzCount <= 0;
 		sdCMDRPStart <= 0;
+    readyToSwitchClock <= 0;
   end  
   
   always @(posedge clk) begin
-    
-    SCLK <= clk250khz;
     
     if(clk250khzCount >= 100) begin
       clk250khzCount <= 0;
@@ -81,6 +84,7 @@ module SD_Initial(
       count = 0;
       isFinish = 0;
       sdCMDRPStart = 0;
+      readyToSwitchClock = 0;
       
       if(isStart) begin
         state = 1;
@@ -150,7 +154,7 @@ module SD_Initial(
     else if(state == 8) begin
       // Check response CMD8
       DI = 1;
-      if(sdCMDRPResponse[11:0] == 12'h01AA) begin
+      if(sdCMDRPResponse[11:0] == 12'h1AA) begin
         state = 9;
       end
       else if(sdCMDRPResponse[39:32] == 8'h09) begin
@@ -177,10 +181,10 @@ module SD_Initial(
     else if(state == 11) begin
       // Check response CMD55
       DI = 1;
-      if(sdCMDRPResponse == 40'h0000000001) begin
+      if(sdCMDRPResponse == 40'h00_0000_0001) begin
         state = 13;
       end
-			else if(sdCMDRPResponse == 40'hFFFFFFFFFF) begin
+			else if(sdCMDRPResponse == 40'hFF_FFFF_FFFF) begin
 				state = 12;
 			end
     end
@@ -197,7 +201,7 @@ module SD_Initial(
       // Sent CMD41
       if(!sdCMDRPBusy) begin
         sdIndex = 41;
-        sdArgument = 32'h40000000;
+        sdArgument = 32'h4000_0000;
         sdCMDRPStart = 1;
         state = 14;
       end
@@ -212,14 +216,14 @@ module SD_Initial(
     else if(state == 15) begin
       // Check response CMD41
       DI = 1;
-      if(sdCMDRPResponse == 40'h0000000000) begin
+      if(sdCMDRPResponse == 40'h00_0000_0000) begin
         state = 17;
       end
       else state = 16;
     end
     else if(state == 16) begin
       if(clk250khzTrigger) begin
-        if(count > 60000) begin
+        if(count > 10000) begin
           count = 0;
           state = 9;
         end
@@ -228,6 +232,7 @@ module SD_Initial(
     end
     else if(state == 17) begin
       // Sent CMD58
+      readyToSwitchClock = 1;
       if(!sdCMDRPBusy) begin
         sdIndex = 58;
         sdArgument = 0;
@@ -245,34 +250,11 @@ module SD_Initial(
     else if(state == 19) begin
       // Check response CMD58
       DI = 1;
-      if(sdCMDRPResponse[30] == 0) begin
+      if(sdCMDRPResponse[30] == 1) begin
         state = 20;
       end
-      else state = 23;
     end
     else if(state == 20) begin
-      // Sent CMD16
-      if(!sdCMDRPBusy) begin
-        sdIndex = 16;
-        sdArgument = 32'h00000200;
-        sdCMDRPStart = 1;
-        state = 21;
-      end
-    end
-    else if(state == 21) begin
-      DI = sdCMDRPDI;
-      if(sdCMDRPFinish) begin
-        sdCMDRPStart = 0;
-        state = 22;
-      end
-    end
-    else if(state == 22) begin
-      DI = 1;
-      if(sdCMDRPResponse == 0 || sdCMDRPResponse == 8'h40) begin
-        state = 23;
-      end
-    end
-    else if(state == 23) begin
       isFinish = 1;
     end
     else begin

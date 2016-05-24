@@ -31,12 +31,12 @@ module SD_Delay(
     end
     else if(state == 1) begin
       if(count == times) begin
-        finish <= 1;
         state <= 2;
       end
       else count <= count + 1;
     end
     else if(state == 2) begin
+      finish <= 1;
       if(!start) begin
         state <= 0;
       end
