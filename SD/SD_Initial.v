@@ -32,9 +32,9 @@ module SD_Initial(
   
   assign SCLK = readyToSwitchClock ? clk : clk250khz;
   
-  assign debug = {sdCMDRPResponse[39:32], 2'b0, state[5:0]};
-  //assign debug = {sdCMDRPResponse[31:16]};
-  
+  assign debug = {sdCMDRPResponse[7:0], 2'b00, state[5:0]};
+  //assign debug = {sdCMDRPResponse[15:0]};
+   
   SD_CMD_RP SDCMDRP(
     .index(sdIndex),
     .argument(sdArgument),
@@ -93,7 +93,7 @@ module SD_Initial(
     else if(state == 1) begin
       // Sent clock 74 times
       if(clk250khzTrigger) begin
-        if(count > 30000) begin
+        if(count > 3000) begin
           count = 0;
           state = 2;
         end

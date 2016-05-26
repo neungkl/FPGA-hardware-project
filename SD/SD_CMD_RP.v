@@ -8,7 +8,8 @@ module SD_CMD_RP(
   output DI,
   input DO,
   output reg [39:0] response,
-  input clk );
+  input clk,
+  output [15:0] debug );
   
   reg [2:0] state;
   
@@ -41,6 +42,8 @@ module SD_CMD_RP(
     .clk(clk),
     .reset(reset)
   );
+  
+  assign debug = state;
   
   initial begin
     isBusy <= 0;

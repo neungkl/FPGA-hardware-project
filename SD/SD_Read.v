@@ -4,6 +4,7 @@
 `include "../SD/SD_Delay.v"
 `include "../SD/SD_Data_RP.v"
 `include "../SD/SD_Initial.v"
+`include "../SD/SD_CLK_COUNT.v"
 
 module SD_Read(
   input DO,
@@ -24,29 +25,21 @@ module SD_Read(
   parameter MEM_SIZE = 9;
   parameter END_TOKEN = 8'h2D;
   parameter ADDR_SIZE = (1 << MEM_SIZE) - 1;
-
-  reg [2:0] state;
-  reg [2:0] state2;
+  
+  reg [5:0] state;
   
   reg [7:0] data [0:ADDR_SIZE];
-  reg [MEM_SIZE:0] id;
   
-  reg [MEM_SIZE:0] i;
-  reg [3:0] j;
-  reg [MEM_SIZE:0] i2;
-  reg [7:0] dump;
-  
-  reg [7:0] dataToken;
-  reg [15:0] CRC;
+  integer i;
+  integer j;
   
   reg [9:0] blockNumber;
-  
+	
   wire sdInitSCLK;
   wire sdInitDI;
   wire sdInitCS;
-	wire sdInitFinish;
-  
-  assign isInitSDFinish = sdInitFinish;
+	
+	assign SCLK = sdInitSCLK;
   
   SD_Initial sdInit(
     .DO(DO),
@@ -58,19 +51,6 @@ module SD_Read(
     .clk(clk),
     .reset(reset),
 		.debug(debug)
-  );
-	
-	assign SCLK = (state == 0) ? sdInitSCLK : clk;
-  
-  reg sdDelayStart;
-  reg [3:0] sdDelayTimes;
-  wire sdDelayFinish;
-  
-  SD_Delay #(.COUNT_SIZE(4)) sdDelay(
-    .start(sdDelayStart),
-    .finish(sdDelayFinish),
-    .times(sdDelayTimes),
-    .clk(SCLK) 
   );
   
   reg [5:0] sdCMDRPIndex;
@@ -95,77 +75,66 @@ module SD_Read(
     .clk(SCLK)
   );
   
-  //assign debug = {sdCMDRPResponse[11:0], 1'b0, state[2:0]};
-  
-  reg pushToFiFoFinish;
-  
   initial begin
     state = 0;
     sdCMDRPStart = 0;
-    sdDelayStart = 0;
     blockNumber = 4;
-    isFinish = 0;
     i = 0;
     j = 0;
-    i2 = 0;
-    id = 0;
-    DI = 1;
-    pushToFiFoFinish = 0;
   end
   
-  // Fetching Data Packet
-  always @(posedge clk) begin
+  /*always @(posedge clk) begin
     if(reset) begin
-      i = 0;
-      j = 0;
-    end
+      state2 = 0;
+      id = 0;
+      foFinish = 1;
+    end 
     else begin
-    
-    if(state2 == 0) begin
-      i = 0;
-      j = 0;
-      if(sdCMDRP_RPFinish) begin
-        state2 = 1;
+      if(state2 == 0) begin
+        foFinish = 1;
+        sentBegin = 0;
+        if(foStart) begin
+          foData = foData_raw;
+          foFinish = 0;
+          state2 = 1;
+        end
       end
-    end
-    else if(state2 == 1) begin
-      if(!DO) begin
-        j = 7;
-        i = 0;
-        state2 = 2;
-      end
-    end
-    else if(state2 == 2) begin
-      data[i][j] = DO;
-      if(j == 0) begin
-        if(i == ADDR_SIZE) begin
-          state2 = 3;
+      else if(state2 == 1) begin
+        data[id] = foData;
+        if(id == ADDR_SIZE || foData == END_TOKEN) begin
+          sentBegin = 1;
+          state2 = 2;
         end
         else begin
-          j = 7;
-          i = i + 1;
+          id = id + 1;
+          state2 = 3;
         end
       end
-      else j = j - 1;
-    end
-    else if(state2 == 3) begin
-      if(pushToFiFoFinish) begin
-        state2 = 0;
+      else if(state2 == 2) begin
+        sentBegin = 1;
+        if(sentFinish) begin
+          sentBegin = 0; 
+          id = 0;
+          state2 = 3;
+        end
       end
+      else if(state2 == 3) begin
+        foFinish = 1;
+        if(!foStart) begin
+          state2 = 0;
+        end
+      end
+      else state2 = 0;
     end
-    else state2 = 0;
-    
-    end
-  end
+  end*/
   
   always @(posedge clk) begin
+  
     if(reset) begin
       state = 0;
-      foWe = 0;
       sdCMDRPStart = 0;
       blockNumber = 4;
       isFinish = 0;
-      i = 0;
 			DI = 1;
     end
     else begin
@@ -174,100 +143,17 @@ module SD_Read(
       DI = sdInitDI;
       CS = sdInitCS;
       blockNumber = 4;
-      isFinish = 0;
       if(sdInitFinish) begin
         state = 1;
       end
     end
     else if(state == 1) begin
-      DI = 1;
-      CS = 0;
-      sdDelayTimes = 8'h0F;
-      sdDelayStart = 1;
-      if(sdDelayFinish) begin
-        sdDelayStart = 0;
-        state = 2;
-      end
+      state = 1;
     end
-    else if(state == 2) begin
-      if(DO) begin
-        sdCMDRPStart = 0;
-        if(isStart) begin
-          state = 3;
-        end
-      end
-    end
-    else if(state == 3) begin
-      sdDelayTimes = 8'h0F;
-      sdDelayStart = 1;
-      if(sdDelayFinish) begin
-        sdDelayStart = 0;
-        state = 4;
-      end
-    end
-    else if(state == 4) begin
-      // CMD17
-      DI = 1;
-      pushToFiFoFinish = 0;
-      if(!sdCMDRPBusy) begin
-        sdCMDRPIndex = 17;
-        sdCMDRPArgument = blockNumber;
-        sdCMDRPStart = 1;
-        state = 5;
-      end
-    end
-    else if(state == 5) begin
-      DI = sdCMDRPDI;
-      if(sdCMDRPFinish) begin
-        sdCMDRPStart = 0;
-        state = 6;
-      end
-    end
-    else if(state == 6) begin
-      DI = 1;
-      if(sdCMDRPResponse == 0) begin
-        state = 7;
-      end
-    end
-    else if(state == 7) begin
-      // Wait for Data Complete
-      if(state2 == 3) begin
-        i2 = 0;
-        state = 8;
-      end
-    end
-    else if(state == 8) begin
-      if(!foBusy && !foFull) begin
-        foDataSent = data[i2];
-        foWe = 1;
-        state = 9;
-      end
-    end
-    else if(state == 9) begin
-      foWe = 0;
-      if(foDataSent == END_TOKEN) begin
-        state = 10;
-      end
-      else if(i2 == ADDR_SIZE) begin
-        state = 11;
-      end
-      else begin
-        i2 = i2 + 1;
-        state = 8;
-      end
-    end
-    else if(state == 10) begin
-      blockNumber = blockNumber + 1;
-      state = 2;
-    end
-    else if(state == 11) begin
-      pushToFiFoFinish = 1;
-      isFinish = 1;
-    end
-    else state = 0;
+		
+		// END Program
+		end
       
-    end
-    
-  end
-
+	end
+  
 endmodule

@@ -14,13 +14,12 @@ module SD_CMD(
   
   reg [7:0] i;
   reg [3:0] state;
-	wire [6:0] CRC;
   
   reg crcClear;
   reg crcEnable;
   reg crcBit;
   
-  CRC7 crc7(CRC, crcBit, clk, crcEnable, crcClear);
+  reg [6:0] CRC;
 
   initial begin
     isBusy <= 0;
@@ -39,6 +38,7 @@ module SD_CMD(
       crcEnable = 0;
 			isFinish = 0;
 			isBusy = 0;
+      CRC = 0;
       DI = 1;
       if(isStart) begin
         isBusy = 1;
@@ -60,6 +60,12 @@ module SD_CMD(
     end
     else if(state == 3) begin
       crcEnable = 0;
+      case(index)
+      0 : CRC = 7'h4A;
+      8 : CRC = 7'h43;
+      default : CRC = 0;
+      endcase
+      
       state = 4;
     end
     // Begin Sent CMD

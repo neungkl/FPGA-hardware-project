@@ -85,7 +85,7 @@ module Task2B(
     .foWe(fifoWe),
     .foBusy(isFifoBusy),
     .foFull(isFifoFull),
-    .clk(clk),
+    .clk(clk_raw),
     .reset(reset),
     .debug(debugRaw)
   );
